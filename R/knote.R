@@ -61,6 +61,7 @@ knote.md <- function(file=NULL,...) {
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   rHtml = gsub('&#39;',"'",rHtml)
+  rHtml = gsub('&quot;','"',rHtml)
   knote(...,text=rHtml)
 }
 
