@@ -1,0 +1,9 @@
+Package: knoter
+Type: Package
+Title: OneNote HTML format output
+Version: 1.0
+Date: 2015-05-23
+Author: Hiren Joshi <knoter@glycocode.com>
+Maintainer: Hiren Joshi <knoter@glycocode.com>
+Description: Massages output from knitr so that the output is in a format that can be more easily uploaded to OneNote.
+License: LGPL
