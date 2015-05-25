@@ -13,4 +13,5 @@ Imports:
 	knitr
 Suggests:
 	XLConnect,
-	markdown
+	markdown,
+	httr
