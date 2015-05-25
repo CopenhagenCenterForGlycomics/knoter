@@ -1,21 +1,22 @@
 
 `%n%` = function(x, y) if (is.null(x)) y else x
 
+#' @export
 excel <- function(...,name=NA) {
   obj <- list(...)
   class(obj) <- "excel.workbook"
   if ( ! is.na(name) ) {
     attr(obj,'name') <- name
   }
-  varid <- substring(tempfile(pattern="excel",tmpdir=''),2)
-  assign(varid,obj,parent.frame())
+  assign(variable_name_for_class('excel.workbook',parent.frame()),obj,parent.frame())
   return ()
 }
 
+#' @export
 table <- function(dataframe) {
   dataframe <- xtable::xtable(dataframe)
   varid <- substring(tempfile(pattern="html.table",tmpdir=''),2)
-  assign(varid,dataframe,parent.frame())  
+  assign( variable_name_for_class('excel.workbook',parent.frame()) ,dataframe,parent.frame())
 }
 
 extract_source_excel_block <- function(tags) {
@@ -23,17 +24,29 @@ extract_source_excel_block <- function(tags) {
   source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")[[1]]
   results <- list()
   if (!is.null(source_node)) {
-    results$source_node <- XML::saveXML(source_node)    
+    results$source_node <- XML::saveXML(source_node)
   }
   results$excel_node <- sapply(XML::getNodeSet(root,'//excel/text()'),function(node) { XML::saveXML(node) })
   XML::free(root)
   results
 }
 
-get_objects_with_class <- function(class,envir) {
-  object.names=Filter(function(var) { class(envir[[var]]) == class},objects(envir))
+variable_name_for_class <- function(class,envir) {
+  existing_objects <- sort( Filter(function(var) { class(envir[[var]]) == class},objects(envir)) )
+  if (length(existing_objects) > 0) {
+    varid <- paste(existing_objects[[1]],length(existing_objects)+1,sep='_')
+  } else {
+    varid <- substring(tempfile(pattern=class,tmpdir=''),2)
+  }
+  varid
+}
+
+get_objects_with_class <- function(class,envir,remove=T) {
+  object.names=sort( Filter(function(var) { class(envir[[var]]) == class},objects(envir)) )
   objects=sapply(object.names,function(obj) { get(obj,envir) },simplify=F)
-  rm(list=object.names,envir=envir)
+  if (remove) {
+    rm(list=object.names,envir=envir)
+  }
   objects
 }
 
@@ -51,7 +64,7 @@ write_workbook <- function(data,filename) {
   output <- XLConnect::loadWorkbook(filename,create=T)
   for (sheet in names(data)) {
     XLConnect::createSheet(output,sheet)
-    XLConnect::writeWorksheet(output,data[[sheet]],sheet=sheet)    
+    XLConnect::writeWorksheet(output,data[[sheet]],sheet=sheet)
   }
   XLConnect::saveWorkbook(output)
 }
@@ -72,6 +85,7 @@ file_is_markdown <- function(file=NULL,...) {
   return(FALSE)
 }
 
+#' @export
 knote <- function(...,append.meta.created=T) {
   if (file_is_markdown(...)) {
     return(knote.md(...,append.meta.created))
@@ -83,7 +97,7 @@ knote <- function(...,append.meta.created=T) {
     root <- XML::htmlParse(paste(x,collapse=''),asText=T)
     nodeset <- XML::getNodeSet(root, "/html/head/meta[@name='created']")
     if (! is.null(nodeset)) {
-      XML::removeNodes(nodeset)      
+      XML::removeNodes(nodeset)
     }
     XML::addChildren(XML::getNodeSet(root, "/html/head")[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
     text <- XML::saveXML(root)
@@ -103,12 +117,19 @@ knote <- function(...,append.meta.created=T) {
       if (length(tables) > 0) {
         table_data <- (sapply(tables,function(tab) { print(tab,type='html') },simplify=T,USE.NAMES=F))
         return (table_data)
-      }      
+      }
     }
   })
   knitr::render_html()
-  knitr::opts_chunk$set(dev=c('png','pdf'),check.excel=T,make.tables=T,data.path='data/')
-  knitr::opts_knit$set(eval.after = 'check.excel')
+
+  knitr::opts_chunk$set(dev=c('png','pdf'),data.path='data/')
+  if (requireNamespace('XLConnect',quietly=T)) {
+    knitr::opts_chunk$set(check.excel=T)
+    knitr::opts_knit$set(eval.after = 'check.excel')
+  } else {
+    message("XLConnect is not installed, not writing Excel files")
+  }
+  knitr::opts_chunk$set(make.tables=T)
   old_chunk <- knitr::knit_hooks$get('chunk')
   knitr::knit_hooks$set(plot=function(x,options) {
     x = knitr::hook_plot_html(x,options)
@@ -122,7 +143,6 @@ knote <- function(...,append.meta.created=T) {
              '"></object></div><div class="rcode">\n'
           ,sep='')
   },chunk=function(x,options) {
-    message("Doing output of chunk",options$label)
     if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
       components<-extract_source_excel_block(c('<root>',x,'</root>'))
       x<- c( components$source_node, sapply(components$excel_node, function(file) {
