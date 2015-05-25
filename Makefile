@@ -34,7 +34,7 @@ install: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
 NAMESPACE: $(R_FILES)
-	Rscript -e "library(roxygen2);roxygenize('.')"
+	Rscript -e "library(roxygen2);roxygenize('.',roclets=c('rd','namespace'))"
 
 clean:
 	-rm -f $(PKG_NAME)_*.tar.gz
