@@ -16,21 +16,21 @@ DESCRIPTION-vars: DESCRIPTION
 R_FILES := $(wildcard R/*.R)
 SRC_FILES := $(wildcard src/*) $(addprefix src/, $(COPY_SRC))
 PKG_FILES := DESCRIPTION NAMESPACE $(R_FILES) $(SRC_FILES)
-TARBALL_NAME = $(PKG_NAME)_$(PKG_VERSION).tar.gz
+TARBALL_NAME := $(PKG_NAME)_$(PKG_VERSION).tar.gz
  
-.PHONY: tarball install check clean build
+.PHONY: tarball install check clean build DESCRIPTION-vars
  
 $(PKG_NAME)_$(PKG_VERSION).tar.gz: $(PKG_FILES)
 	@echo $(PKG_NAME)_$(PKG_VERSION).tar.gz
-#	R CMD build .
+	R CMD build .
 
-check: $(PKG_NAME)_$(PKG_VERSION).tar.gz
+check: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD check $(PKG_NAME)_$(PKG_VERSION).tar.gz
  
-build: $(PKG_NAME)_$(PKG_VERSION).tar.gz
+build: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL --build $(PKG_NAME)_$(PKG_VERSION).tar.gz
  
-install: $(PKG_NAME)_$(PKG_VERSION).tar.gz
+install: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
 NAMESPACE: $(R_FILES)
@@ -45,7 +45,7 @@ clean:
 .SECONDEXPANSION:
 tarball: DESCRIPTION-vars $$(TARBALL_NAME)
 
-.PHONY: list DESCRIPTION-vars
+.PHONY: list
 list:
 	@echo "R files:"
 	@echo $(R_FILES)
