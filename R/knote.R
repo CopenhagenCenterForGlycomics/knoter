@@ -1,6 +1,23 @@
 
 `%n%` = function(x, y) if (is.null(x)) y else x
 
+#' Mark a set of dataframes to be turned into an Excel workbook
+#'
+#' To mark out a set of dataframes to be turned into a Excel workbook,
+#' call this function with the dataframes as arguments. Named arguments
+#' will result in the names used as the worksheet names.
+#'
+#' @param ... Data frames to place in workbook
+#' @param name Name to use to name the workbook file
+#' @examples
+#' excel(Cars_sheet=cars,CO2_sheet=CO2)
+#'
+#' # Use default sheet names
+#' excel(cars,CO2)
+#'
+#' # Write to a specific filename
+#' excel(cars,name="Cars")
+#' @seealso \code{\link{knit}}
 #' @export
 excel <- function(...,name=NA) {
   obj <- list(...)
@@ -12,6 +29,14 @@ excel <- function(...,name=NA) {
   return ()
 }
 
+#' Mark a dataframe to be turned into a HTML table
+#'
+#' To mark out a dataframe as one that should be
+#' turned into a HTML table, call this function
+#' on the dataframe within the output chunk.
+#'
+#' @param dataframe Data frame to turn into a HTML table
+#' @seealso \code{\link{knit}}
 #' @export
 table <- function(dataframe) {
   dataframe <- xtable::xtable(dataframe)
@@ -69,7 +94,7 @@ write_workbook <- function(data,filename) {
   XLConnect::saveWorkbook(output)
 }
 
-knote.md <- function(file=NULL,...) {
+knit.md <- function(file=NULL,...) {
   results = markdown::markdownToHTML(file,options=c('skip_style'),stylesheet='',extensions=c())
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
@@ -85,10 +110,23 @@ file_is_markdown <- function(file=NULL,...) {
   return(FALSE)
 }
 
+#' Knit a Rhtml or Rmd file to a HTML document
+#'
+#' Wrapper function for knitr that will take 
+#' a source \code{Rhtml} or \code{Rmd} file,
+#' and prepare it so that it can be uploaded.
+#' This involves producing Excel workbooks 
+#' and extra PDF versions of figures.
+#'
+#' Arguments are the same as found for
+#' \code{\link[knitr]{knit}}.
+#'
+#' @param append.meta.created Append a meta tag with the created date
+#' @seealso \code{\link[knitr]{knit}}
 #' @export
-knote <- function(...,append.meta.created=T) {
+knit <- function(...,append.meta.created=T) {
   if (file_is_markdown(...)) {
-    return(knote.md(...,append.meta.created))
+    return(knit.md(...,append.meta.created))
   }
   knitr::knit_hooks$set(document=function(x) {
     if ( ! append.meta.created ) {
