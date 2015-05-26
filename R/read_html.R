@@ -9,8 +9,52 @@ string_to_file_upload <- function(filename,contents,mime) {
     result
 }
 
+css_def_to_inline <- function(css) {
+    attrs = names(css)
+    paste(sapply(attrs, function(attr) {
+        paste(attr,":",css[[attr]],";",sep='')
+    }),collapse=" ")
+}
+
+inline_css <- function(root) {
+    style_nodes = XML::getNodeSet(root,'/html/head/style')
+    css_defs = sapply( style_nodes, function(style) {
+        css_lines=strsplit( XML::getChildrenStrings(style),'\n',fixed=T)[[1]]
+        if (any(grepl("[A-Za-z]",css_lines))) {
+            knitr:::css.parser(lines=css_lines)
+        }
+    })
+    css_defs = css_defs[[ ! is.null(css_defs) ]]
+    names(css_defs) <- gsub(' +',' ', gsub('.',' ',names(css_defs),fixed=T))
+    spans = XML::getNodeSet(root,'//span[@class]')
+    sapply(spans, function(span_node) {
+        css_def = css_def_to_inline( css_defs[[ XML::xmlAttrs(span_node,'class') ]] )
+        XML::xmlAttrs(span_node) <- c(style=css_def,class=NULL)
+    })
+}
+
+style_pre_tags <- function(root) {
+    pres = XML::getNodeSet(root,'//pre[@class="knitr r"]')
+    sapply(pres,function(pre_node) {
+        XML::xmlAttrs(pre_node) <- c(style="font-family: Courier;")
+        XML::xmlName(pre_node) <- 'div'
+    })
+}
+
+style_source_tags <- function(root) {
+    divs = XML::getNodeSet(root,'//div[@class="source"]')
+    sapply(divs,function(div_node) {
+        XML::xmlAttrs(div_node) <- c(style="background-color: #f5f5f5;")
+    })
+}
+
 read_html <- function(filename) {
     root <- XML::htmlParse(filename,asText=F)
+
+    inline_css(root)
+    style_pre_tags(root)
+    style_source_tags(root)
+
     elements_to_read <- c( XML::getNodeSet(root, '//img[not(starts-with(@src, "http"))]') , XML::getNodeSet(root,'//object[starts-with(@data, "file://")]') )
     to_attach <- list()
     for (external in elements_to_read) {
