@@ -100,7 +100,7 @@ knit.md <- function(file=NULL,...) {
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   rHtml = gsub('&#39;',"'",rHtml)
   rHtml = gsub('&quot;','"',rHtml)
-  knote(...,text=rHtml)
+  knoter::knit(...,text=rHtml)
 }
 
 file_is_markdown <- function(file=NULL,...) {

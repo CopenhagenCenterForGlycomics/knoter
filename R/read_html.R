@@ -48,8 +48,8 @@ style_source_tags <- function(root) {
     })
 }
 
-read_html <- function(filename) {
-    root <- XML::htmlParse(filename,asText=F)
+read_html <- function(html,asText) {
+    root <- XML::htmlParse(html,asText=asText)
 
     inline_css(root)
     style_pre_tags(root)
