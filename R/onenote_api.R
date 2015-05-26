@@ -28,7 +28,6 @@ upload_files <- function(notebook_name,section_name,files=list()) {
 
 }
 
-
 do_api_call <- function(url,method='get',...) {
 	access_info <- doSignin()
 	config=httr::add_headers(Authorization = paste('Bearer', access_info$access_token))
@@ -39,7 +38,3 @@ do_api_call <- function(url,method='get',...) {
 		return ( httr::content(httr::POST(paste(api_url_base,url,sep=''),encode="multipart",config=config,...)) )
 	}
 }
-
-
-#httr::POST("https://httpbin.org/post",encode="multipart",body=blah,config=httr::add_headers(Authorization = paste('Bearer', access_info$access_token)))
-#httr::verbose(data_out=TRUE))
