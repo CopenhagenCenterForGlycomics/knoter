@@ -3,26 +3,50 @@
 #
 # Roxygen uses the roxygen2 package, and will run automatically on check and all.
 
+BUILDDIR = pkg
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
+
 version_number:
 	$(eval VERSION := $(shell ./tools/convertversion.sh))
 
-DESCRIPTION: src/DESCRIPTION version_number
+$(BUILDDIR)/DESCRIPTION: DESCRIPTION version_number $(BUILDDIR) package_directories
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' $< | sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > $@
 
-DESCRIPTION-vars: DESCRIPTION
-	$(eval PKG_VERSION := $(shell grep -i ^version DESCRIPTION | cut -d : -d \  -f 2))
-	$(eval PKG_NAME := $(shell grep -i ^package DESCRIPTION | cut -d : -d \  -f 2))
+DESCRIPTION-vars: $(BUILDDIR)/DESCRIPTION
+	$(eval PKG_VERSION := $(shell grep -i ^version pkg/DESCRIPTION | cut -d : -d \  -f 2))
+	$(eval PKG_NAME := $(shell grep -i ^package pkg/DESCRIPTION | cut -d : -d \  -f 2))
+
+$(BUILDDIR)/R/%: R/%
+	cp -f $< $@
+
+$(BUILDDIR)/src/%: src/%
+	cp -f $< $@
 
 R_FILES := $(wildcard R/*.R)
 SRC_FILES := $(wildcard src/*) $(addprefix src/, $(COPY_SRC))
-PKG_FILES := DESCRIPTION NAMESPACE $(R_FILES) $(SRC_FILES)
+PKG_FILES := $(BUILDDIR)/DESCRIPTION $(BUILDDIR)/NAMESPACE $(addprefix $(BUILDDIR)/,$(R_FILES)) $(addprefix $(BUILDDIR)/,$(SRC_FILES))
+MAN_FILES := $(addprefix $(BUILDDIR)/,$(wildcard man/*))
 TARBALL_NAME := $(PKG_NAME)_$(PKG_VERSION).tar.gz
+
+$(BUILDDIR)/man: man
+	cp -f $</* $@
+
+$(BUILDDIR)/NAMESPACE: NAMESPACE
+	cp -f $< $@
+
+package_directories:
+	mkdir -p $(BUILDDIR)/R
+	mkdir -p $(BUILDDIR)/src
+	mkdir -p $(BUILDDIR)/man
  
-.PHONY: tarball install check clean build DESCRIPTION-vars
+.PHONY: tarball install check clean build DESCRIPTION-vars package_directories
  
-$(PKG_NAME)_$(PKG_VERSION).tar.gz: $(PKG_FILES)
+$(PKG_NAME)_$(PKG_VERSION).tar.gz: package_directories $(PKG_FILES) $(BUILDDIR)/man
+	@echo $(MAN_FILES)
 	@echo $(PKG_NAME)_$(PKG_VERSION).tar.gz
-	R CMD build .
+	R CMD build $(BUILDDIR)
 
 check: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD check $(PKG_NAME)_$(PKG_VERSION).tar.gz
@@ -41,6 +65,7 @@ clean:
 	-rm -r -f $(PKG_NAME).Rcheck
 	-rm -r -f man/*
 	-rm -r -f NAMESPACE
+	-rm -r -f $(BUILDDIR)
 
 .SECONDEXPANSION:
 tarball: DESCRIPTION-vars $$(TARBALL_NAME)
