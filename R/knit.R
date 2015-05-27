@@ -148,7 +148,10 @@ knit <- function(...,append.meta.created=T) {
     if (! is.null(nodeset)) {
       XML::removeNodes(nodeset)
     }
-    XML::addChildren(XML::getNodeSet(root, "/html/head")[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
+    head_elements = XML::getNodeSet(root, "/html/head")
+    if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
+      XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
+    }
     text <- XML::saveXML(root)
     XML::free(root)
     text

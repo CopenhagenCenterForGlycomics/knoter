@@ -18,6 +18,9 @@ css_def_to_inline <- function(css) {
 
 inline_css <- function(root) {
     style_nodes = XML::getNodeSet(root,'/html/head/style')
+    if (is.null(style_nodes) || length(style_nodes) < 1 ) {
+        return()
+    }
     css_defs = sapply( style_nodes, function(style) {
         css_lines=strsplit( XML::getChildrenStrings(style),'\n',fixed=T)[[1]]
         if (any(grepl("[A-Za-z]",css_lines))) {
@@ -48,7 +51,7 @@ style_source_tags <- function(root) {
     })
 }
 
-read_html <- function(html,asText) {
+read_html <- function(html,asText,fragment.only=F) {
     root <- XML::htmlParse(html,asText=asText)
 
     inline_css(root)
@@ -70,8 +73,17 @@ read_html <- function(html,asText) {
         }
         to_attach[[length(to_attach)+1]] <- list(part_id=part_id, filename=  gsub("file://",'', filename,fixed=T) )
     }
+    element_to_save = NULL
+    if (! fragment.only) {
+        element_to_save = paste('<?xml version="1.0" encoding="utf-8" ?>\n', XML::saveXML(root,doctype=NULL),sep='')
+    } else {
+        target_node = XML::getNodeSet(root,'//body')[[1]]
+        XML::xmlName(target_node) <- 'div'
+        element_to_save = XML::saveXML(target_node)
+    }
+
     files = list()
-    files[['Presentation']] <- string_to_file_upload( 'Presentation', paste('<?xml version="1.0" encoding="utf-8" ?>\n', XML::saveXML(root,doctype=NULL),sep=''), 'application/xhtml+xml' )
+    files[['Presentation']] <- string_to_file_upload( 'Presentation', element_to_save, 'application/xhtml+xml' )
     for (attachment in to_attach) {
         mime = mime::guess_type(attachment$filename)
         files[[attachment$part_id]] <- httr::upload_file(attachment$filename,mime)
