@@ -94,8 +94,8 @@ write_workbook <- function(data,filename) {
   XLConnect::saveWorkbook(output)
 }
 
-knit.md <- function(...,output=NULL) {
-  results = markdown::markdownToHTML(...,options=c('skip_style'),stylesheet='',extensions=c())
+knit.md <- function(input,text=NULL,...) {
+  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c())
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   rHtml = gsub('&#39;',"'",rHtml)
@@ -103,8 +103,8 @@ knit.md <- function(...,output=NULL) {
   knoter::knit(...,text=rHtml)
 }
 
-file_is_markdown <- function(..,file=NULL,text=NULL) {
-  if (is.character(file) && tools::file_ext( file ) == 'Rmd') {
+file_is_markdown <- function(input,text=NULL) {
+  if (is.character(input) && tools::file_ext( input ) == 'Rmd') {
     return(TRUE)
   }
   pat = knitr::all_patterns[['md']][['chunk.begin']]
@@ -136,7 +136,7 @@ file_is_markdown <- function(..,file=NULL,text=NULL) {
 #' @seealso \code{\link[knitr]{knit}}
 #' @export
 knit <- function(...,append.meta.created=T) {
-  if (file_is_markdown(...)) {
+  if (file_is_markdown(list(...)[[1]], text=list(...)[['text']])) {
     return(knit.md(...,append.meta.created))
   }
   knitr::knit_hooks$set(document=function(x) {

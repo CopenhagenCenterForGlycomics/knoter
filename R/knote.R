@@ -12,15 +12,10 @@
 #' @export
 knote <- function(...,notebook,section) {
 	arguments = list(...)
-	output_file = arguments[['output']]
-	
+	text_input = arguments[['text']]
+
 	knitted = knoter::knit(...)
-	if (! is.null(output_file) ) {
-		knitted = output_file
-	}
-
-	files = read_html(knitted,asText=is.null(output_file))
-
+	files = read_html(knitted,asText=!is.null(text_input))
 	if ( ! is.null(notebook) && ! is.null(section)) {
 		upload_files(notebook,section,files)		
 	}
