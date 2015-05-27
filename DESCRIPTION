@@ -1,7 +1,7 @@
 Package: knoter
 Type: Package
 Title: OneNote HTML format output
-Version: 1.0
+Version: 0.0.0
 Date: 2015-05-23
 Author: Hiren Joshi <knoter@glycocode.com>
 Maintainer: Hiren Joshi <knoter@glycocode.com>
