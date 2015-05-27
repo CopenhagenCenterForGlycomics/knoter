@@ -43,7 +43,7 @@ package_directories:
  
 .PHONY: tarball install check clean build DESCRIPTION-vars package_directories
  
-$(PKG_NAME)_$(PKG_VERSION).tar.gz: package_directories $(PKG_FILES) documentation
+$(PKG_NAME)_$(PKG_VERSION).tar.gz: package_directories $(PKG_FILES) package-documentation
 	@echo $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD build $(BUILDDIR)
 
@@ -57,18 +57,20 @@ install: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
 NAMESPACE: $(R_FILES)
-	Rscript -e "library(roxygen2);roxygenize('.',roclets=c('rd','namespace'))"
+	Rscript -e "library(roxygen2);roxygenize('.',roclets=c('namespace'))"
 
-.PHONY: documentation
-documentation: NAMESPACE
+.PHONY: package-documentation documentation
+man documentation:
+	Rscript -e "library(roxygen2);roxygenize('.',roclets=c('rd'))"	
+package-documentation: man
 	cp -f man/* $(BUILDDIR)/man/
 #	Rscript -e "library(roxygen2);roxygenize('pkg',roclets=c('rd','namespace'))"
 
 
-clean:
+clean: DESCRIPTION-vars
 	-rm -f $(PKG_NAME)_*.tar.gz
 	-rm -r -f $(PKG_NAME).Rcheck
-	-rm -r -f man/*
+	-rm -r -f man
 	-rm -r -f $(BUILDDIR)
 
 
