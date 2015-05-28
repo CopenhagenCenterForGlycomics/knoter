@@ -100,6 +100,7 @@ knit.md <- function(input,text=NULL,...) {
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   rHtml = gsub('&#39;',"'",rHtml)
   rHtml = gsub('&quot;','"',rHtml)
+  rHtml = gsub('&amp;','&',rHtml)
   knoter::knit(...,text=rHtml)
 }
 
@@ -107,6 +108,11 @@ file_is_markdown <- function(input,text=NULL) {
   if (is.character(input) && tools::file_ext( input ) == 'Rmd') {
     return(TRUE)
   }
+  if (is.null(text)) {
+    return(FALSE)
+  }
+  text = unlist(strsplit(text,"\n"))
+
   pat = knitr::all_patterns[['md']][['chunk.begin']]
 
   if (is.character(text) && length(grep(pat, text))) {
