@@ -101,6 +101,8 @@ knit.md <- function(input,text=NULL,...) {
   rHtml = gsub('&#39;',"'",rHtml)
   rHtml = gsub('&quot;','"',rHtml)
   rHtml = gsub('&amp;','&',rHtml)
+  rHtml = gsub('&lt;', '<', rHtml)
+  rHtml = gsub('&gt;', '>', rHtml)
   knoter::knit(...,text=rHtml)
 }
 
