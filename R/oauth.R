@@ -1,5 +1,7 @@
 
-current_token <- NULL
+cacheEnv <- new.env()
+
+assign('current_token',NULL,envir=cacheEnv)
 
 get_request_token <- function(endpoint, app, scope = NULL, type = NULL,
                           use_oob = T, redirect_uri = 'urn:ietf:wg:oauth:2.0:oob',is_interactive = interactive()) {
@@ -34,8 +36,8 @@ get_request_token <- function(endpoint, app, scope = NULL, type = NULL,
 # @importFrom httr oauth_app
 # @importFrom httr oauth2.0_token
 doSignin <- function(client_id=getOption("OneDriveClientId"),client_secret=getOption("GoogleClientSecret")) {
-  if (!is.null(current_token)) {
-    return(current_token)
+  if (!is.null(get('current_token',envir=cacheEnv))) {
+    return(get('current_token',envir=cacheEnv))
   }
   if (! is.null(getOption("current_token"))) {
     return(list(access_token=getOption("current_token")))
@@ -53,6 +55,6 @@ doSignin <- function(client_id=getOption("OneDriveClientId"),client_secret=getOp
   } else {
     token <- get_request_token(login.live,onenote.app,scope=scopes,use_oob = F, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html")
   }
-  current_token <<- token
+  assign('current_token', token, envir=cacheEnv)
 	return (token)
 }

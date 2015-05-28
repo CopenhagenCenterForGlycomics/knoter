@@ -3,4 +3,5 @@
 export(excel)
 export(knit)
 export(knote)
+export(knote.append)
 export(table)
