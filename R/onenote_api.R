@@ -58,8 +58,10 @@ patch_page <- function(notebook_name,section_name,page_name,files=list()) {
 		names(files)[1] <- 'Commands'
 		files[[1]]$filename <- 'Commands'
 		files[[1]]$contentType <- 'application/json'
-		files[[1]]$contents <- paste("[{'target':'body','action':'append','content':'",files[[1]]$contents,"'}]")
+		files[[1]]$contents <- paste("[{'target':'body','action':'append','content':'", gsub('"','\\\\"', gsub("'","\\\\'",files[[1]]$contents)) ,"'}]")
 		results = do_api_call(paste('pages/',page_id,'/content',sep=''),method='patch',body=files)
+	} else {
+		message("Cannot get Page ID")
 	}
 }
 
