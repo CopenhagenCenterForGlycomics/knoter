@@ -4,11 +4,20 @@ api_url_base <- 'https://www.onenote.com/api/v1.0/'
 
 list_notebooks <- function() {
 	data <- do_api_call(url='notebooks', query=list(select= 'name'))
-	if (data) {
-		return(data$value)
+	if (! is.null(data) ) {
+		return(as.character(unlist(data$value)))
 	}
 }
 
+list_sections <- function(notebook) {
+	notebook_id <- get_target_id(notebook)
+	if (!is.null(notebook_id)) {
+		datas = do_api_call(url=paste('notebooks/',notebook_id,'/sections',sep=''), query=list(select ='name' ))$value
+		if (! is.null(datas)) {
+			return(as.character(unlist(datas)))
+		}
+	}
+}
 
 get_target_id <- function(notebook,section=NULL,page=NULL) {
 	notebook_id = NULL
@@ -65,16 +74,32 @@ patch_page <- function(notebook_name,section_name,page_name,files=list()) {
 	}
 }
 
+handle_http_errors <- function(response) {
+	status_code <- httr::status_code(response)
+	if (status_code >= 200 && status_code < 300) {
+		return ()
+	}
+	if (status_code >= 400 && status_code < 500) {
+		stop("Not authorized to do this on the server")
+	}
+	if (status_code >= 500) {
+		stop("There was a server error, try again later")
+	}
+}
+
 do_api_call <- function(url,method='get',...) {
 	access_info <- doSignin()
-	config=httr::add_headers(Authorization = paste('Bearer', access_info$access_token))
 	if (method == 'get') {
-		return ( httr::content(httr::GET(paste(api_url_base,url,sep=''),...,config=config)) )
+		resp = httr::GET(paste(api_url_base,url,sep=''),...,httr::config(token=access_info))
+		handle_http_errors(resp)
 	}
 	if (method == 'post') {
-		return ( httr::content(httr::POST(paste(api_url_base,url,sep=''),encode="multipart",config=config,...)) )
+		resp = httr::POST(paste(api_url_base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		handle_http_errors(resp)
 	}
 	if (method == 'patch') {
-		return ( httr::content(httr::PATCH(paste(api_url_base,url,sep=''),encode="multipart",config=config,...)) )
+		resp = httr::PATCH(paste(api_url_base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		handle_http_errors(resp)
 	}
+	return (httr::content(resp))
 }

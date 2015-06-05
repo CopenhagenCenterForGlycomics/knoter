@@ -3,7 +3,7 @@ cacheEnv <- new.env()
 
 assign('current_token',NULL,envir=cacheEnv)
 
-get_request_token <- function(endpoint, app, scope = NULL, type = NULL,
+init_oauth2.0_request_token <- function(endpoint, app, scope = NULL, type = NULL,
                           use_oob = T, redirect_uri = 'urn:ietf:wg:oauth:2.0:oob',is_interactive = interactive()) {
 
   stopifnot(interactive())
@@ -32,6 +32,25 @@ get_request_token <- function(endpoint, app, scope = NULL, type = NULL,
   return(result)
 }
 
+RequestToken <- R6::R6Class("RequestToken", inherit = httr::Token2.0, list(
+  init_credentials = function() {
+    message("Initing credentials from scratch")
+    self$credentials <- init_oauth2.0_request_token(self$endpoint, self$app,
+      scope = self$params$scope, type = self$params$type,
+      use_oob = self$params$use_oob, redirect_uri = self$params$redirect_uri)
+  },
+  can_refresh = function() {
+    TRUE
+  },
+  refresh = function() {
+    message("Refreshing credentials")
+    self$credentials <- init_oauth2.0_request_token(self$endpoint, self$app,
+      scope = self$params$scope, type = self$params$type,
+      use_oob = self$params$use_oob, redirect_uri = self$params$redirect_uri)
+    self$cache()
+  }
+))
+
 # @importFrom httr oauth_endpoint
 # @importFrom httr oauth_app
 # @importFrom httr oauth2.0_token
@@ -53,7 +72,8 @@ doSignin <- function(client_id=getOption("OneDriveClientId"),client_secret=getOp
   if (! is.null(client_secret)) {
     token <- httr::oauth2.0_token(login.live,onenote.app,scope=c(scopes,'wl.offline_access'),use_oob=F)
   } else {
-    token <- get_request_token(login.live,onenote.app,scope=scopes,use_oob = F, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html")
+    token <- RequestToken$new(onenote.app,login.live,params = list(use_oob = F, scope = scopes, type = NULL, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html",as_header=T) )
+#    get_request_token(login.live,onenote.app,scope=scopes,use_oob = F, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html")
   }
   assign('current_token', token, envir=cacheEnv)
 	return (token)
