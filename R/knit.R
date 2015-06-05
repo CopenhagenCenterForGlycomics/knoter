@@ -140,8 +140,34 @@ file_is_markdown <- function(input,text=NULL) {
 #' Arguments are the same as found for
 #' \code{\link[knitr]{knit}}.
 #'
+#' Input data to be knitted can be either a filename, or
+#' text containing the \code{Rmd} or \code{Rhtml} that
+#' can be converted. Regardless of the input type, the
+#' output of the function will be the knitted html - unless
+#' the output parameter is specified, and the filename that
+#' the output data is written to is returned.
+#'
+#' @param input   Input file to knit
+#' @param text    Supply Rhtml or Rmd as a text string
+#' @param output  Output html to a file, and return filename as result
 #' @param append.meta.created Append a meta tag with the created date
 #' @seealso \code{\link[knitr]{knit}}
+#' @examples
+#' # Return the knitted Rhtml document as HTML text
+#' html_string <- knoter::knit('example.Rhtml')
+#'
+#' # Return the knitted Rmd document as HTML text
+#' html_string <- knoter::knit('example.Rmd')
+#'
+#' # Write the output of the knit to a file.
+#' out_filename <- knoter::knit('example.Rhtml',output='example.html')
+#'
+#' # Convert some Rmd to a HTML document
+#' rmd_text = "## This is a heading ##\n\nThis is a paragraph with some inline R `r 1 + 1` that will be converted.\n\n"
+#' html_string <- knoter::knit(text=rmd_text)
+#'
+#' # or if we want to write it to a file
+#' out_filename <- knoter::knit(text=rmd_text,output='example.html')
 #' @export
 knit <- function(...,append.meta.created=T) {
   if (file_is_markdown(list(...)[[1]], text=list(...)[['text']])) {
