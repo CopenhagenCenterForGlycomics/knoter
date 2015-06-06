@@ -28,7 +28,26 @@ This will append a header, and a paragraph with some inline R to the page `My Pa
 
 ### Limitations
 
-OneNote only supports a subset of HTML for uploading into their notebooks. As long as you stick to a relatively simple subset of tags (e.g. `<table>`,`<div>`,`<ul>`,`<img>`), the upload should work. Inline style attributes are likely to be removed, so don't count on the availability of styling.
+OneNote only supports a subset of HTML for uploading into their notebooks. As long as you stick to a relatively simple subset of tags (see: [Tags](#Tags)), the upload should work. Inline style attributes are likely to be removed, so don't count on the availability of styling.
+
+
+### <a name="Tags"></a> Tag support
+
+The full list of supported tags can be found at the [OneNote API description](https://msdn.microsoft.com/en-us/library/office/dn575442.aspx)
+
+|  Supported Tag                       |
+|:-------------------------------------|
+| `<table>` , `<tr>` , `<td>`          |
+| `<div>`                              |
+| `<ul>` , `<ol>` , `<li>`             |
+| `<img>`                              |
+| `<a>`                                |
+| `<br/>`                              |
+| `<h1>` to `<h6>`                     |
+| `<b>`, `<em>`, `<strong>`, `<i>`     |
+| `<u>`, `<strike>`, `<del>`           |
+| `<sup>`, `<sub>`, `<cite>`, `<font>` |
+
 
 ### Licensing
 
