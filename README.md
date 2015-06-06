@@ -34,7 +34,7 @@ This will append a header, and a paragraph with some inline R to the page `My Pa
 
 ### Limitations
 
-OneNote only supports a subset of HTML for uploading into their notebooks. As long as you stick to a relatively simple subset of tags (see: [Tags](#Tags)), the upload should work. Inline style attributes are likely to be removed, so don't count on the availability of styling.
+OneNote only supports a subset of HTML for uploading into their notebooks. As long as you stick to a relatively simple subset of tags (see: [Tag support](#Tags)), the upload should work. Inline style attributes are likely to be removed, so don't count on the availability of styling.
 
 
 ### <a name="Tags"></a> Tag support
