@@ -98,7 +98,13 @@ knit.md <- function(input,text=NULL,...) {
   results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c())
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
+  # Markdown gets escaped to HTML - we should unescape anything
+  # https://github.com/rstudio/markdown/blob/master/src/houdini_html_e.c
+
+  # FIXME: We should be unescaping all the nodes that are in comment blocks here
+  # instead of unescaping everything
   rHtml = gsub('&#39;',"'",rHtml)
+  rHtml = gsub('&#47;','/',rHtml)
   rHtml = gsub('&quot;','"',rHtml)
   rHtml = gsub('&amp;','&',rHtml)
   rHtml = gsub('&lt;', '<', rHtml)
