@@ -6,8 +6,10 @@ Knoter is an accessory library to the venerable [Knitr](https://github.com/yihui
 
 The development version of the tool can be installed using devtools
 
+```R
     devtools::install_github('hirenj/knoter')
-    
+```
+
 ### Basic Usage
 
   - Create your reports as usual using RHTML (`Rhtml`) or R Markdown (`Rmd`).
@@ -15,14 +17,18 @@ The development version of the tool can be installed using devtools
 
 A single command will upload your report to OneNote
 
+```R
     knoter::knote('example.Rhtml',notebook='My Notebook',section='My Section')
+```
 
 Knoter will log in to OneNote for you, asking for permissions to write to your OneNote notebooks.
 
 Or, if you'd like to append some Markdown to a page
 
+```R
     my_markdown = "## Header\n\n This is some inline R `r 1+1`.\n"
     knoter::knote.append(text=my_markdown,notebook='My Notebook',section='My Section',page='My Page')
+```
 
 This will append a header, and a paragraph with some inline R to the page `My Page`.
 
