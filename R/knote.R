@@ -33,7 +33,7 @@ knote <- function(...,notebook,section) {
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
-	files = read_html(knitted,asText=!is.null(file_output),fragment.only=F)
+	files = read_html(knitted,asText=is.null(file_output),fragment.only=F)
 	if ( ! is.null(notebook) && ! is.null(section)) {
 		upload_files(notebook,section,files)		
 	}
@@ -67,7 +67,7 @@ knote.append <- function(...,notebook,section,page) {
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
-	files = read_html(knitted,asText=!is.null(file_output),fragment.only=T)
+	files = read_html(knitted,asText=is.null(file_output),fragment.only=T)
 	if ( ! is.null(notebook) && ! is.null(section) && ! is.null(page) ) {
 		patch_page(notebook,section,page,files)
 	}

@@ -242,6 +242,7 @@ knit <- function(...,append.meta.created=T) {
   }
   knitr::opts_chunk$set(make.tables=T)
   old_chunk <- knitr::knit_hooks$get('chunk')
+  old_source <- knitr::knit_hooks$get('source')
   knitr::knit_hooks$set(plot=function(x,options) {
     x = knitr::hook_plot_html(x,options)
     paste(x, '</div><div>',
@@ -267,6 +268,9 @@ knit <- function(...,append.meta.created=T) {
       x <- block
     }
     return (old_chunk(x,options))
+  },source=function(x,options) {
+    x <- old_source(x,options)
+    paste(gsub("\n","<br/>",gsub("\n$","",x),fixed=T),"\n",sep='')
   });
   knitr::knit(...)
 }
