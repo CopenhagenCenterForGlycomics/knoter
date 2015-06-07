@@ -106,16 +106,18 @@ fix_escaping <- function(html) {
     XML::free(root)
     return(html)
   }
+  to_change <- list()
 
   sapply(1:length(comments),function(idx) {
     comment = XML::xmlValue(comments[[idx]])
-    comment = Reduce(function(out,next.val) {
+    to_change[[comment]] <<- Reduce(function(out,next.val) {
       gsub(next.val,ESCAPE_LOOKUPS[[next.val]],out,fixed=T)
     },names(ESCAPE_LOOKUPS),comment)
-    XML::replaceNodes(comments[[idx]],XML::newXMLCommentNode(comment))
   })
+  html <- Reduce(function(out,next.val) {
+    gsub(next.val,to_change[[next.val]],out,fixed=T)
+  },names(to_change),html)
 
-  html <- XML::saveXML(root)
   XML::free(root)
   return (html)
 
