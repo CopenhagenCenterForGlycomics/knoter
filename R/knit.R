@@ -39,9 +39,7 @@ excel <- function(...,name=NA) {
 #' @seealso \code{\link{knit}}
 #' @export
 table <- function(dataframe) {
-  dataframe <- xtable::xtable(dataframe)
-  varid <- substring(tempfile(pattern="html.table",tmpdir=''),2)
-  assign( variable_name_for_class('html.table',parent.frame()) ,dataframe,parent.frame())
+  knitr::kable(dataframe,format="html")
 }
 
 extract_source_excel_block <- function(tags) {
@@ -222,14 +220,6 @@ knit <- function(...,append.meta.created=T) {
         return(paste(sapply(filenames,function(filename) { paste('<excel>',filename,'</excel>',sep='') }),collapse=''))
       }
     }
-  },make.tables=function(before,options,envir) {
-    if ( ! before) {
-      tables = get_objects_with_class('xtable',envir)
-      if (length(tables) > 0) {
-        table_data <- (sapply(tables,function(tab) { print(tab,type='html') },simplify=T,USE.NAMES=F))
-        return (table_data)
-      }
-    }
   })
   knitr::render_html()
 
@@ -240,7 +230,6 @@ knit <- function(...,append.meta.created=T) {
   } else {
     message("XLConnect is not installed, not writing Excel files")
   }
-  knitr::opts_chunk$set(make.tables=T)
   old_chunk <- knitr::knit_hooks$get('chunk')
   old_source <- knitr::knit_hooks$get('source')
   knitr::knit_hooks$set(plot=function(x,options) {
