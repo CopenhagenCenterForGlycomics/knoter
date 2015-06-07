@@ -41,7 +41,7 @@ excel <- function(...,name=NA) {
 table <- function(dataframe) {
   dataframe <- xtable::xtable(dataframe)
   varid <- substring(tempfile(pattern="html.table",tmpdir=''),2)
-  assign( variable_name_for_class('excel.workbook',parent.frame()) ,dataframe,parent.frame())
+  assign( variable_name_for_class('html.table',parent.frame()) ,dataframe,parent.frame())
 }
 
 extract_source_excel_block <- function(tags) {
