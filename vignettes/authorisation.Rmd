@@ -9,18 +9,40 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
-The Knoter package has been designed so that for the normal occasional use case, the
+The Knoter package has been designed so that for the normal (occasional) use case, the
 package requires no extra configuration. However, if you are a power user, and want to
 non-interactively authorise and upload to OneNote, you can set up an application configuration
 with Microsoft to achieve this.
 
 ## Online access
 
-A default client identifier is used, and requires re-authorisation every hour.
+Online access requires a browser to be available for authentication. When you perform an action that requires authentication and authorisation, Knoter will either use an existing, 
+cached set of credentials, or ask for new credentials.
+
+```R
+knoter::knote('page.Rmd',notebook='Notebook',section='Section')
+```
+
+If you are not logged in, a browser window will open, asking you to log in to authorise this application. After granting access to the application once, you will need to log in again every hour. Knoter automatically loads up the browser window when you need to re-authenticate.
 
 ## Offline access
 
-- Client Secret `ONENOTE_CONSUMER_SECRET`
-- Client ID `ONENOTE_CLIENT_ID`
-- DNS alias for localhost `HTTR_SERVER`
+Offline access currently is slightly more complicated than it should be due to restrictions on the redirect URIs imposed by the OneNote API.
+
+### Getting API credentials
+
+You need two credentials to allow access to the OneNote API: The client ID and the client secret (i.e. consumer secret). 
+
+In order to get this, create an application using the [https://account.live.com/developers/applications/](API console). Under `API Settings`, make sure the application has the following settings:
+
+- Mobile or Desktop app is checked/selected
+- Redirect URL is `http://knoter-local.localtest.me:1401`
+
+The Redirect URL uses the localtest.me service to associate a domain name with localhost, as the OneNote API does not allow localhost as a redirect URL. Alternatively, you could set up your DNS locally (using hosts files) to avoid a dependency on this external service.
+
+The Client ID and Client Secret can be found under `App Settings`, and the DNS alias (e.g. `knoter-local.localtest.me`) can be used to set the following environment variables in your `.Renviron` file.
+
+- Client Secret: `ONENOTE_CONSUMER_SECRET`
+- Client ID: `ONENOTE_CLIENT_ID`
+- DNS alias for localhost: `HTTR_SERVER`
 
