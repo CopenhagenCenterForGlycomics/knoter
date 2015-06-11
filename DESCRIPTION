@@ -14,5 +14,5 @@ Imports:
 Suggests:
 	XLConnect,
 	markdown,
-	httr
+	httr (< 0.7)
 VignetteBuilder: knitr
