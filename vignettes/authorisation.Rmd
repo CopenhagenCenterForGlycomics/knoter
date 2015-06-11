@@ -27,7 +27,7 @@ If you are not logged in, a browser window will open, asking you to log in to au
 
 ## Offline access
 
-Offline access currently is slightly more complicated than it should be due to restrictions on the redirect URIs imposed by the OneNote API.
+Offline access currently is slightly more complicated than it should be due to restrictions on the redirect URIs imposed by the OneNote API. Once the API credentials are set up, you can use Knoter without any further configuration.
 
 ### Getting API credentials
 
@@ -46,3 +46,6 @@ The Client ID and Client Secret can be found under `App Settings`, and the DNS a
 - Client ID: `ONENOTE_CLIENT_ID`
 - DNS alias for localhost: `HTTR_SERVER`
 
+### httr version
+
+The current version of httr does not support the `HTTR_SERVER` environment variable, and first-time authentication should be performed using the github version of `httr`. Importantly, knoter does not support the github version of `httr` for normal operation, and it should be downgraded to the released version (`0.6.x`) when using knoter.
