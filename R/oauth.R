@@ -51,10 +51,30 @@ RequestToken <- R6::R6Class("RequestToken", inherit = httr::Token2.0, list(
   }
 ))
 
+DEFAULT_CLIENT_ID <- '000000004414F678'
+
 # @importFrom httr oauth_endpoint
 # @importFrom httr oauth_app
 # @importFrom httr oauth2.0_token
-doSignin <- function(client_id=getOption("OneDriveClientId"),client_secret=getOption("GoogleClientSecret")) {
+doSignin <- function(client_id,client_secret=NULL) {
+  if (missing(client_id)) {
+    env_name <- "ONENOTE_CLIENT_ID"
+    env_client_id <- Sys.getenv(env_name)
+    if (env_client_id != "") {
+      client_id <- env_client_id
+      message("Using Client ID stored in environment variable ", env_client_id)
+    } else {
+      client_id <- DEFAULT_CLIENT_ID
+    }
+  }
+  if (missing(client_secret)) {
+    env_name <- "ONENOTE_CONSUMER_SECRET"
+    client_secret <- Sys.getenv(env_name)
+    if (client_secret != "") {
+      message("Using Client Secret stored in environment variable ", client_secret)
+    }
+  }
+
   if (!is.null(get('current_token',envir=cacheEnv))) {
     return(get('current_token',envir=cacheEnv))
   }
@@ -62,18 +82,16 @@ doSignin <- function(client_id=getOption("OneDriveClientId"),client_secret=getOp
     return(list(access_token=getOption("current_token")))
   }
 
-	login.live <- httr::oauth_endpoint(authorize="https://login.live.com/oauth20_authorize.srf",access="https://login.live.com/oauth20_token.srf")
+  login.live <- httr::oauth_endpoint(authorize="https://login.live.com/oauth20_authorize.srf",access="https://login.live.com/oauth20_token.srf")
 
   # https://login.live.com/oauth20_desktop.srf
-
-	onenote.app <- httr::oauth_app("onenote",client_id,secret=client_secret)
+  onenote.app <- httr::oauth_app("onenote",key=client_id,secret=client_secret)
   scopes = c('office.onenote_create','office.onenote_update')
 
   if (! is.null(client_secret)) {
-    token <- httr::oauth2.0_token(login.live,onenote.app,scope=c(scopes,'wl.offline_access'),use_oob=F)
+    token <- httr::oauth2.0_token(login.live,onenote.app,scope=c(scopes,'wl.offline_access'))
   } else {
     token <- RequestToken$new(onenote.app,login.live,params = list(use_oob = F, scope = scopes, type = NULL, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html",as_header=T) )
-#    get_request_token(login.live,onenote.app,scope=scopes,use_oob = F, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html")
   }
   assign('current_token', token, envir=cacheEnv)
 	return (token)

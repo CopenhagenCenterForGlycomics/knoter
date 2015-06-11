@@ -1,0 +1,26 @@
+---
+title: "Authorisation"
+author: "Hiren Joshi"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+The Knoter package has been designed so that for the normal occasional use case, the
+package requires no extra configuration. However, if you are a power user, and want to
+non-interactively authorise and upload to OneNote, you can set up an application configuration
+with Microsoft to achieve this.
+
+## Online access
+
+A default client identifier is used, and requires re-authorisation every hour.
+
+## Offline access
+
+- Client Secret `ONENOTE_CONSUMER_SECRET`
+- Client ID `ONENOTE_CLIENT_ID`
+- DNS alias for localhost `HTTR_SERVER`
+
