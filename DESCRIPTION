@@ -1,6 +1,6 @@
 Package: knoter
 Type: Package
-Title: OneNote HTML format output
+Title: OneNote HTML Format Output
 Version: 0.1.1
 Date: 2015-06-11
 Authors@R: person("Hiren", "Joshi", email = "knoter@glycocode.com",
