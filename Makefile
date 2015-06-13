@@ -90,10 +90,8 @@ NAMESPACE: $(R_FILES)
 .PHONY: package-documentation documentation
 man documentation:
 	Rscript -e "library(roxygen2);roxygenize('.',roclets=c('rd'))"	
-package-documentation: man
+package-documentation: documentation
 	cp -f man/* $(BUILDDIR)/man/
-#	Rscript -e "library(roxygen2);roxygenize('pkg',roclets=c('rd','namespace'))"
-
 
 clean: DESCRIPTION-vars
 	-rm -f $(PKG_NAME)_*.tar.gz
