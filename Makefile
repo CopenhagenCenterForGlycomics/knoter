@@ -42,13 +42,17 @@ $(BUILDDIR)/R/%: R/%
 $(BUILDDIR)/src/%: src/%
 	cp -f $< $@
 
+$(BUILDDIR)/tests/%: tests/%
+	cp -rf $< $@
+
 $(BUILDDIR)/vignettes/%: vignettes/%
 	cp -f $< $@
 
 R_FILES := $(wildcard R/*.R)
 SRC_FILES := $(wildcard src/*) $(addprefix src/, $(COPY_SRC))
 VIGNETTE_FILES := $(wildcard vignettes/*)
-PKG_FILES := $(BUILDDIR)/DESCRIPTION $(BUILDDIR)/NAMESPACE $(addprefix $(BUILDDIR)/,$(R_FILES)) $(addprefix $(BUILDDIR)/,$(SRC_FILES)) $(addprefix $(BUILDDIR)/,$(VIGNETTE_FILES))
+TEST_FILES := $(wildcard tests/*)
+PKG_FILES := $(BUILDDIR)/DESCRIPTION $(BUILDDIR)/NAMESPACE $(addprefix $(BUILDDIR)/,$(R_FILES)) $(addprefix $(BUILDDIR)/,$(SRC_FILES)) $(addprefix $(BUILDDIR)/,$(VIGNETTE_FILES)) $(addprefix $(BUILDDIR)/,$(TEST_FILES))
 MAN_FILES := $(addprefix $(BUILDDIR)/,$(wildcard man/*))
 TARBALL_NAME := $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
@@ -63,6 +67,7 @@ package_directories:
 	mkdir -p $(BUILDDIR)/src
 	mkdir -p $(BUILDDIR)/man
 	mkdir -p $(BUILDDIR)/vignettes
+	mkdir -p $(BUILDDIR)/tests
  
 .PHONY: tarball install check clean build DESCRIPTION-vars package_directories
  
