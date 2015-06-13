@@ -128,7 +128,9 @@ knit.md <- function(input,text=NULL,...) {
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   rHtml = fix_escaping(rHtml)
-  knoter::knit(...,text=rHtml)
+  args = list(...)
+  args['text'] <- rHtml
+  do.call( knoter::knit, args )
 }
 
 file_is_markdown <- function(input,text=NULL) {
@@ -196,7 +198,9 @@ file_is_markdown <- function(input,text=NULL) {
 #' @export
 knit <- function(...,append.meta.created=T) {
   if (file_is_markdown(list(...)[[1]], text=list(...)[['text']])) {
-    return(knit.md(...,append.meta.created))
+    args = list(...)
+    args['append.meta.created'] <- append.meta.created
+    return(do.call( knit.md, args))
   }
   knitr::knit_hooks$set(document=function(x) {
     if ( ! append.meta.created ) {
