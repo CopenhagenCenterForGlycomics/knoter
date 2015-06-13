@@ -25,9 +25,9 @@ init_oauth2.0_request_token <- function(endpoint, app, scope = NULL, type = NULL
 
   result <- NULL
   if (isTRUE(use_oob)) {
-    result <- list(access_token = httr:::oauth_exchanger(authorize_url)$code)
+    result <- list(access_token = httr::oauth_exchanger(authorize_url)$code)
   } else {
-    result <- httr:::oauth_listener(authorize_url, is_interactive)
+    result <- httr::oauth_listener(authorize_url, is_interactive)
   }
   return(result)
 }

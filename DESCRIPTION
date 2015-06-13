@@ -15,5 +15,6 @@ Suggests:
 	XLConnect,
 	markdown,
 	httr (< 0.7),
+	mime,
 	testthat
 VignetteBuilder: knitr
