@@ -197,11 +197,18 @@ file_is_markdown <- function(input,text=NULL) {
 #' }
 #' @export
 knit <- function(...,append.meta.created=T) {
-  if (file_is_markdown(list(...)[[1]], text=list(...)[['text']])) {
-    args = list(...)
+  args = list(...)
+
+  if (file_is_markdown(args[[1]], text=args[['text']])) {
     args['append.meta.created'] <- append.meta.created
     return(do.call( knit.md, args))
   }
+
+  if (file.exists(args[[1]])) {
+    args[['text']] <- readChar(args[[1]], file.info(args[[1]])$size)
+    args[[1]] <- NULL
+  }
+
   knitr::knit_hooks$set(document=function(x) {
     if ( ! append.meta.created ) {
       return (x);
@@ -276,5 +283,5 @@ knit <- function(...,append.meta.created=T) {
     x <- old_source(x,options)
     paste(gsub("\n","<br/>",gsub("\n$","",x),fixed=T),"\n",sep='')
   });
-  knitr::knit(...)
+  return (do.call(knitr::knit,args))
 }
