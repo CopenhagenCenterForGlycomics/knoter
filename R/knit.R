@@ -203,8 +203,7 @@ knit <- function(...,append.meta.created=T) {
     args['append.meta.created'] <- append.meta.created
     return(do.call( knit.md, args))
   }
-
-  if (file.exists(args[[1]])) {
+  if ( ( is.null(names(args)) || names(args)[[1]] == "" ) && file.exists(args[[1]]) && is.null(args[['text']])) {
     args[['text']] <- readChar(args[[1]], file.info(args[[1]])$size)
     args[[1]] <- NULL
   }
