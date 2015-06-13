@@ -174,12 +174,11 @@ file_is_markdown <- function(input,text=NULL) {
 #' the output parameter is specified, and the filename that
 #' the output data is written to is returned.
 #'
-#' @param input   Input file to knit
-#' @param text    Supply Rhtml or Rmd as a text string
-#' @param output  Output html to a file, and return filename as result
+#' @param ...     Parameters passed to \code{link[knitr]{knit}}.
 #' @param append.meta.created Append a meta tag with the created date
 #' @seealso \code{\link[knitr]{knit}}
 #' @examples
+#' \dontrun{
 #' # Return the knitted Rhtml document as HTML text
 #' html_string <- knoter::knit('example.Rhtml')
 #'
@@ -195,6 +194,7 @@ file_is_markdown <- function(input,text=NULL) {
 #'
 #' # or if we want to write it to a file
 #' out_filename <- knoter::knit(text=rmd_text,output='example.html')
+#' }
 #' @export
 knit <- function(...,append.meta.created=T) {
   if (file_is_markdown(list(...)[[1]], text=list(...)[['text']])) {
