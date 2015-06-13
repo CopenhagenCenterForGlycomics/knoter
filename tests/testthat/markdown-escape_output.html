@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+.knitr .inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+}
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.rimage .left {
+  text-align: left;
+}
+.rimage .right {
+  text-align: right;
+}
+.rimage .center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Escaping R in blocks</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+
+</style>
+
+
+
+</head>
+
+<body>
+<h1>Escaping R in blocks</h1>
+
+
+<div class="chunk" id="unnamed-chunk-1"><div class="rcode"><div class="source"><pre class="knitr r"><span class="hl std">foo</span><span class="hl kwb">=</span><span class="hl str">&quot;bar&quot;</span><br/><span class="hl std">baz</span><span class="hl kwb">=</span><span class="hl str">'bar'</span><br/><span class="hl std">foo</span> <span class="hl opt">==</span> <span class="hl std">baz</span><br/></pre></div>
+<div class="output"><pre class="knitr r">## [1] TRUE
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl num">1</span><span class="hl opt">/</span><span class="hl num">2</span> <span class="hl opt">==</span> <span class="hl num">2</span><span class="hl opt">/</span><span class="hl num">4</span><br/></pre></div>
+<div class="output"><pre class="knitr r">## [1] TRUE
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl num">TRUE</span> <span class="hl opt">&amp;</span> <span class="hl num">TRUE</span><br/></pre></div>
+<div class="output"><pre class="knitr r">## [1] TRUE
+</pre></div>
+<div class="source"><pre class="knitr r"><span class="hl num">1</span> <span class="hl opt">&lt;</span> <span class="hl num">2</span> <span class="hl opt">&amp;</span> <span class="hl num">2</span> <span class="hl opt">&gt;</span> <span class="hl num">1</span><br/></pre></div>
+<div class="output"><pre class="knitr r">## [1] TRUE
+</pre></div>
+</div></div>
+
+
+</body>
+
+</html>

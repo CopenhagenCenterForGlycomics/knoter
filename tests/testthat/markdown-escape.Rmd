@@ -1,0 +1,10 @@
+# Escaping R in blocks
+
+```{r}
+foo="bar"
+baz='bar'
+foo == baz
+1/2 == 2/4
+TRUE & TRUE
+1 < 2 & 2 > 1
+```
