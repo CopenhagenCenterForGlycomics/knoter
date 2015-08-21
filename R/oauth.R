@@ -1,7 +1,7 @@
 
 cacheEnv <- new.env()
 
-assign('current_token',NULL,envir=cacheEnv)
+assign('knoter_current_token',NULL,envir=cacheEnv)
 
 init_oauth2.0_request_token <- function(endpoint, app, scope = NULL, type = NULL,
                           use_oob = T, redirect_uri = 'urn:ietf:wg:oauth:2.0:oob',is_interactive = interactive()) {
@@ -75,11 +75,11 @@ doSignin <- function(client_id,client_secret=NULL) {
     }
   }
 
-  if (!is.null(get('current_token',envir=cacheEnv))) {
-    return(get('current_token',envir=cacheEnv))
+  if (!is.null(get('knoter_current_token',envir=cacheEnv))) {
+    return(get('knoter_current_token',envir=cacheEnv))
   }
-  if (! is.null(getOption("current_token"))) {
-    return(list(access_token=getOption("current_token")))
+  if (! is.null(getOption("knoter_current_token"))) {
+    return(list(access_token=getOption("knoter_current_token")))
   }
 
   login.live <- httr::oauth_endpoint(authorize="https://login.live.com/oauth20_authorize.srf",access="https://login.live.com/oauth20_token.srf")
