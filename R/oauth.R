@@ -72,6 +72,8 @@ doSignin <- function(client_id,client_secret=NULL) {
     client_secret <- Sys.getenv(env_name)
     if (client_secret != "") {
       message("Using Client Secret stored in environment variable ", client_secret)
+    } else {
+      client_secret <- NULL
     }
   }
 
