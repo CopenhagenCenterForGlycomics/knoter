@@ -1,5 +1,5 @@
 language: r
 sudo: true
-warnings_are_errors: true
+warnings_are_errors: false
 apt_packages:
  - r-cran-rjava
