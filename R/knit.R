@@ -280,7 +280,7 @@ knit <- function(...,append.meta.created=T) {
     return (old_chunk(x,options))
   },source=function(x,options) {
     x <- old_source(x,options)
-    paste(gsub("\n","<br/>",gsub("\n$","",x),fixed=T),"\n",sep='')
+    paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
   });
   return (do.call(knitr::knit,args))
 }

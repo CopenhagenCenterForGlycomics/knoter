@@ -53,6 +53,14 @@ style_pre_tags <- function(root) {
 style_source_tags <- function(root) {
     divs = XML::getNodeSet(root,'//div[@class="source"]')
     sapply(divs,function(div_node) {
+        table_el <- XML::newXMLNode("table")
+        row_el <- XML::newXMLNode('tr')
+        td_el <- XML::newXMLNode('td')
+        XML::addChildren(table_el, row_el)
+        XML::addChildren(row_el,td_el)
+        XML::replaceNodes(div_node,table_el)
+        XML::xmlAttrs(row_el) <- c(style="background-color: #f5f5f5;")
+        XML::addChildren(td_el,div_node)
         XML::xmlAttrs(div_node) <- c(style="background-color: #f5f5f5;")
     })
 }
