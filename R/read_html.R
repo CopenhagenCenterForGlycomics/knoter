@@ -3,9 +3,15 @@ id_generator <- function(size=6) {
 }
 
 string_to_file_upload <- function(filename,contents,mime) {
-    result <- structure(list(filename = as.character(filename), contents = contents, 
-        contentType = as.character(mime)))
-    attr(result,'class') <- "FileUploadInfo"
+    if ( compareVersion(as.character(packageVersion("httr")),"0.7") < 1 ) {
+        result <- structure(list(filename = as.character(filename), contents = contents,
+            contentType = as.character(mime)))
+        attr(result,'class') <- "FileUploadInfo"
+    } else {
+        toupload <- tempfile()
+        writeLines(contents, toupload)
+        result <- httr::upload_file(toupload, type = as.character(mime))
+    }
     result
 }
 
