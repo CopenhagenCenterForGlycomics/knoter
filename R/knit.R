@@ -243,7 +243,7 @@ knit <- function(...,append.meta.created=T) {
   })
   knitr::render_html()
 
-  knitr::opts_chunk$set(dev=c('png','pdf'),data.path='data/')
+  knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F)),data.path='data/')
   if (requireNamespace('XLConnect',quietly=T)) {
     knitr::opts_chunk$set(check.excel=T)
     knitr::opts_knit$set(eval.after = 'check.excel')
