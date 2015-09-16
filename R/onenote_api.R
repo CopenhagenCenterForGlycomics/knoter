@@ -65,9 +65,7 @@ patch_page <- function(notebook_name,section_name,page_name,files=list()) {
 	page_id = get_target_id(notebook_name,section_name,page_name)
 	if ( ! is.null(page_id) && length(files) > 0) {
 		names(files)[1] <- 'Commands'
-		files[[1]]$filename <- 'Commands'
-		files[[1]]$contentType <- 'application/json'
-		files[[1]]$contents <- paste("[{'target':'body','action':'append','content':'", gsub('"','\\\\"', gsub("'","\\\\'",files[[1]]$contents)) ,"'}]")
+		files[[1]] <- string_to_file_upload( 'Commands', paste("[{'target':'body','action':'append','content':'", gsub('"','\\\\"', gsub("'","\\\\'", readChar(files[[1]]$path,file.info(files[[1]]$path)$size) )) ,"'}]"), 'application/json' )
 		results = do_api_call(paste('pages/',page_id,'/content',sep=''),method='patch',body=files)
 	} else {
 		message("Cannot get Page ID")
