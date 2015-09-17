@@ -27,13 +27,13 @@ inline_css <- function(root) {
     if (is.null(style_nodes) || length(style_nodes) < 1 ) {
         return()
     }
-    css_defs = sapply( style_nodes, function(style) {
+    css_defs = unlist( sapply( style_nodes, function(style) {
         css_lines=strsplit( XML::getChildrenStrings(style),'\n',fixed=T)[[1]]
         if (any(grepl("[A-Za-z]",css_lines))) {
-            knitr:::css.parser(lines=css_lines)
+          return (knitr:::css.parser(lines=css_lines))
         }
-    })
-    css_defs = css_defs[[ ! is.null(css_defs) ]]
+    },simplify=F),recursive=F)
+    css_defs = css_defs[ ! is.null(css_defs) ]
     names(css_defs) <- gsub(' +',' ', gsub('.',' ',names(css_defs),fixed=T))
     spans = XML::getNodeSet(root,'//span[@class]')
     sapply(spans, function(span_node) {
