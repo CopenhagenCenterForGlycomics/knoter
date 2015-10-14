@@ -107,7 +107,6 @@ fix_escaping <- function(html) {
     return(html)
   }
   to_change <- list()
-
   sapply(1:length(comments),function(idx) {
     comment = XML::xmlValue(comments[[idx]])
     to_change[[comment]] <<- Reduce(function(out,next.val) {
@@ -212,7 +211,8 @@ knit <- function(...,append.meta.created=T) {
     if ( ! append.meta.created ) {
       return (x);
     }
-    root <- XML::htmlParse(paste(x,collapse=''),asText=T)
+    text = gsub('&nbsp;','nbsp',paste(x,collapse=''))
+    root <- XML::htmlParse(text,asText=T,replaceEntities=T)
     nodeset <- XML::getNodeSet(root, "/html/head/meta[@name='created']")
     if (! is.null(nodeset)) {
       XML::removeNodes(nodeset)
@@ -221,7 +221,9 @@ knit <- function(...,append.meta.created=T) {
     if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
       XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
     }
-    text <- XML::saveXML(root)
+    text = XML::saveXML(root)
+    text = gsub('nbsp','&nbsp;',text)
+
     XML::free(root)
     text
   },check.excel=function(before,options,envir) {
@@ -277,7 +279,8 @@ knit <- function(...,append.meta.created=T) {
       block <- paste(x,sep='',collapse='')
       x <- block
     }
-    return (old_chunk(x,options))
+    x <- old_chunk(x,options)
+    return( paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='') )
   },source=function(x,options) {
     x <- old_source(x,options)
     paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')

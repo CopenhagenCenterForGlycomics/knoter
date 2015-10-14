@@ -12,19 +12,19 @@ bump_minor:
 	$(eval VERSION := $(shell ./tools/convertversion.sh "minor"))
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' DESCRIPTION | sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > DESCRIPTION
 	git commit -m 'Minor version bump' -- DESCRIPTION
-	git tag $(VERSION)
+	git tag -a $(VERSION)
 
 bump_major:
 	$(eval VERSION := $(shell ./tools/convertversion.sh "major"))
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' DESCRIPTION | sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > DESCRIPTION
 	git commit -m 'Major version bump' -- DESCRIPTION
-	git tag $(VERSION)
+	git tag -a $(VERSION)
 
 bump_patch:
 	$(eval VERSION := $(shell ./tools/convertversion.sh "patch"))
 	sed 's/^Version: .*$$/Version: '$(VERSION)'/' DESCRIPTION | sed 's/^Date: .*$$/Date: '`date "+%Y-%m-%d"`'/' > DESCRIPTION
 	git commit -m 'Patch version bump' -- DESCRIPTION
-	git tag $(VERSION)
+	git tag -a $(VERSION)
 
 version_number:
 	$(eval VERSION := $(shell ./tools/convertversion.sh))

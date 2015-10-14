@@ -50,6 +50,21 @@ style_pre_tags <- function(root) {
     })
 }
 
+style_output_tags <- function(root) {
+    divs = XML::getNodeSet(root,'//div[@class="source"]')
+    sapply(divs,function(div_node) {
+        table_el <- XML::newXMLNode("table")
+        row_el <- XML::newXMLNode('tr')
+        td_el <- XML::newXMLNode('td')
+        XML::addChildren(table_el, row_el)
+        XML::addChildren(row_el,td_el)
+        XML::replaceNodes(div_node,table_el)
+        XML::xmlAttrs(row_el) <- c(style="background-color: #ffffff;")
+        XML::addChildren(td_el,div_node)
+        XML::xmlAttrs(div_node) <- c(style="background-color: #ffffff;")
+    })
+}
+
 style_source_tags <- function(root) {
     divs = XML::getNodeSet(root,'//div[@class="source"]')
     sapply(divs,function(div_node) {
@@ -95,7 +110,7 @@ read_html <- function(html,asText,fragment.only=F) {
         XML::xmlName(target_node) <- 'div'
         element_to_save = XML::saveXML(target_node)
     }
-
+    element_to_save =gsub(intToUtf8(0x00a0L),'&nbsp;',element_to_save)
     files = list()
     files[['Presentation']] <- string_to_file_upload( 'Presentation', element_to_save, 'application/xhtml+xml' )
     for (attachment in to_attach) {
