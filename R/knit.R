@@ -260,7 +260,7 @@ knit <- function(...,append.meta.created=T) {
     paste(x, '</div><div>',
              '<object type="application/pdf" data="file://',
              knitr::fig_path('.pdf',options),
-             '"  data-attachment="',
+             '" data-attachment="',
              options$label,
              '-',
              options$fig.cur %n% 1L,
@@ -272,7 +272,7 @@ knit <- function(...,append.meta.created=T) {
       x<- c( components$source_node, sapply(components$excel_node, function(file) {
         paste( '<object type="application/vnd.ms-excel" data="file://',
                file,
-               '"  data-attachment="',
+               '" data-attachment="',
                basename(file),
                '"></object>',sep='')
       },USE.NAMES=F,simplify=F))
