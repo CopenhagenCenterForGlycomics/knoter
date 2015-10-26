@@ -1,8 +1,8 @@
 Package: knoter
 Type: Package
 Title: OneNote HTML Format Output
-Version: 0.2.8
-Date: 2015-10-15
+Version: 0.2.9
+Date: 2015-10-26
 Authors@R: person("Hiren", "Joshi", email = "knoter@glycocode.com",
                   role = c("aut", "cre"))
 Description: Massages output from knitr so that the output is in a format that can be more easily uploaded to OneNote. Provides facility for upload of massaged HTML to OneNote servers
