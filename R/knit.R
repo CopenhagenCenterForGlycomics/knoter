@@ -264,7 +264,7 @@ knit <- function(...,append.meta.created=T) {
              options$label,
              '-',
              options$fig.cur %n% 1L,
-             '"></object></div><div class="rcode">\n'
+             '.pdf"></object></div><div class="rcode">\n'
           ,sep='')
   },chunk=function(x,options) {
     if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
@@ -274,7 +274,7 @@ knit <- function(...,append.meta.created=T) {
                file,
                '" data-attachment="',
                basename(file),
-               '"></object>',sep='')
+               '.xls"></object>',sep='')
       },USE.NAMES=F,simplify=F))
       block <- paste(x,sep='',collapse='')
       x <- block
