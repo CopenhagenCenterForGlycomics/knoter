@@ -40,8 +40,8 @@ excel <- function(...,name=NA) {
 #' @export
 table <- function(dataframe) {
   dataframe <- xtable::xtable(dataframe)
-  varid <- substring(tempfile(pattern="html.table",tmpdir=''),2)
-  assign( variable_name_for_class('html.table',parent.frame()) ,dataframe,parent.frame())
+  varid <- substring(tempfile(pattern="xtable",tmpdir=''),2)
+  assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,parent.frame())
 }
 
 extract_source_excel_block <- function(tags) {
@@ -107,12 +107,14 @@ fix_escaping <- function(html) {
     return(html)
   }
   to_change <- list()
-  sapply(1:length(comments),function(idx) {
-    comment = XML::xmlValue(comments[[idx]])
-    to_change[[comment]] <<- Reduce(function(out,next.val) {
-      gsub(next.val,ESCAPE_LOOKUPS[[next.val]],out,fixed=T)
-    },names(ESCAPE_LOOKUPS),comment)
-  })
+  if (length(comments) > 0) {
+    sapply(1:length(comments),function(idx) {
+      comment = XML::xmlValue(comments[[idx]])
+      to_change[[comment]] <<- Reduce(function(out,next.val) {
+        gsub(next.val,ESCAPE_LOOKUPS[[next.val]],out,fixed=T)
+      },names(ESCAPE_LOOKUPS),comment)
+    })
+  }
   html <- Reduce(function(out,next.val) {
     gsub(next.val,to_change[[next.val]],out,fixed=T)
   },names(to_change),html)
@@ -126,6 +128,20 @@ knit.md <- function(input,text=NULL,...) {
   results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c())
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
+  in_rcode = FALSE
+  lines = sapply(unlist(strsplit(rHtml,'\n')),function(line) {
+    if (grepl("begin.rcode",line)) {
+      in_rcode <<- TRUE
+    }
+    if (! in_rcode & grepl("end.rcode",line)) {
+      if ( ! in_rcode ) {
+        return ("</code></p>")
+      }
+      in_rcode <<- FALSE
+    }
+    line
+  })
+  rHtml = paste(lines,collapse="\n")
   rHtml = fix_escaping(rHtml)
   args = list(...)
   args['text'] <- rHtml
@@ -133,7 +149,7 @@ knit.md <- function(input,text=NULL,...) {
 }
 
 file_is_markdown <- function(input,text=NULL) {
-  if (is.character(input) && tools::file_ext( input ) == 'Rmd') {
+  if (is.character(input) && tools::file_ext( input ) %in% c('Rmd','md')) {
     return(TRUE)
   }
   if (is.null(text)) {
