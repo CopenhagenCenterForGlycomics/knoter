@@ -125,7 +125,7 @@ fix_escaping <- function(html) {
 }
 
 knit.md <- function(input,text=NULL,...) {
-  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c())
+  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c('fenced_code'))
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
   rHtml = gsub( "</code></p>", "end.rcode-->\n",  gsub("<p><code>\\{r([^\\}]*)\\}","\n<!--begin.rcode \\1",rHtml))
   in_rcode = FALSE
