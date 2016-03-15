@@ -1,5 +1,8 @@
 language: r
 sudo: true
 warnings_are_errors: false
+r_check_args: --as-cran --no-manual
 apt_packages:
  - r-cran-rjava
+r_packages:
+ - rmarkdown

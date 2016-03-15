@@ -76,7 +76,7 @@ $(PKG_NAME)_$(PKG_VERSION).tar.gz: package_directories $(PKG_FILES) package-docu
 	R CMD build $(BUILDDIR)
 
 check: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
-	R CMD check $(PKG_NAME)_$(PKG_VERSION).tar.gz
+	R CMD check --no-manual $(PKG_NAME)_$(PKG_VERSION).tar.gz
  
 build: DESCRIPTION-vars $(PKG_NAME)_$(PKG_VERSION).tar.gz
 	R CMD INSTALL --build $(PKG_NAME)_$(PKG_VERSION).tar.gz
