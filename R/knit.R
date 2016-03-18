@@ -84,8 +84,12 @@ write_excel_workbooks <- function(books,options) {
 }
 
 write_workbook <- function(data,filename) {
-  if (!file.exists(dirname(filename)))
+  if (!file.exists(dirname(filename))) {
     dir.create(dirname(filename))
+  } else if (file.exists(filename)) {
+    file.remove(filename)
+  }
+
   output <- XLConnect::loadWorkbook(filename,create=T)
   for (sheet in names(data)) {
     XLConnect::createSheet(output,sheet)
