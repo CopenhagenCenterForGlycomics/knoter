@@ -137,7 +137,7 @@ knit.md <- function(input,text=NULL,...) {
     if (grepl("begin.rcode",line)) {
       in_rcode <<- TRUE
     }
-    if (! in_rcode & grepl("end.rcode",line)) {
+    if (grepl("end.rcode",line)) {
       if ( ! in_rcode ) {
         return ("</code></pre>")
       }
