@@ -294,7 +294,7 @@ knit <- function(...,append.meta.created=T) {
                file,
                '" data-attachment="',
                basename(file),
-               '.xls"></object>',sep='')
+               '"></object>',sep='')
       },USE.NAMES=F,simplify=F))
       block <- paste(x,sep='',collapse='')
       x <- block
