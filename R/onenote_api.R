@@ -22,7 +22,7 @@ list_sections <- function(notebook) {
 get_target_id <- function(notebook,section=NULL,page=NULL) {
 	notebook_id = NULL
 	section_id = NULL
-	datas = do_api_call(url='notebooks', method="get", query=list(filter= paste("name eq \'",notebook,"\'",sep='') ,select='id'))$value
+	datas = do_api_call(url='notebooks', method="get", query=list(filter= paste("tolower(name) eq \'",tolower(notebook),"\'",sep='') ,select='id'))$value
 	if ( ! is.null(datas) ) {
 		notebook_id = datas[[1]]$id
 	}
@@ -30,7 +30,7 @@ get_target_id <- function(notebook,section=NULL,page=NULL) {
 		return(notebook_id)
 	}
 	if (!is.null(section) && !is.null(notebook_id)) {
-		datas = do_api_call(url=paste('notebooks/',notebook_id,'/sections',sep=''), method="get",query=list(filter=paste( "name eq \'",section,"\'",sep='' ) , select ='id,pages' ))$value
+		datas = do_api_call(url=paste('notebooks/',notebook_id,'/sections',sep=''), method="get",query=list(filter=paste( "tolower(name) eq \'",tolower(section),"\'",sep='' ) , select ='id,pages' ))$value
 		if (! is.null(datas)) {
 			section_id = datas[[1]]$id
 		}
@@ -43,7 +43,7 @@ get_target_id <- function(notebook,section=NULL,page=NULL) {
 		datas = do_api_call(url=paste('sections/',section_id,'/pages',sep=''), method="get",query=list( select ='id,title' ))$value
 		if (! is.null(datas)) {
 			for (page_data in datas) {
-				if (page_data['title'] == page) {
+				if (tolower(page_data['title']) == tolower(page)) {
 					return (page_data$id)
 				}
 			}
