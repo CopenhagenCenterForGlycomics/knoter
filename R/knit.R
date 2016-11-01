@@ -56,18 +56,18 @@ extract_source_excel_block <- function(tags) {
   results
 }
 
-variable_name_for_class <- function(class,envir) {
-  existing_objects <- sort( Filter(function(var) { class(envir[[var]]) == class},objects(envir)) )
+variable_name_for_class <- function(clazz,envir) {
+  existing_objects <- sort( Filter(function(var) { clazz %in% class(envir[[var]]) },objects(envir)) )
   if (length(existing_objects) > 0) {
     varid <- paste(existing_objects[[1]],length(existing_objects)+1,sep='_')
   } else {
-    varid <- substring(tempfile(pattern=class,tmpdir=''),2)
+    varid <- substring(tempfile(pattern=clazz,tmpdir=''),2)
   }
   varid
 }
 
-get_objects_with_class <- function(class,envir,remove=T) {
-  object.names=sort( Filter(function(var) { class(envir[[var]]) == class},objects(envir)) )
+get_objects_with_class <- function(clazz,envir,remove=T) {
+  object.names=sort( Filter(function(var) { clazz %in% class(envir[[var]])},objects(envir)) )
   objects=sapply(object.names,function(obj) { get(obj,envir) },simplify=F)
   if (remove) {
     rm(list=object.names,envir=envir)
