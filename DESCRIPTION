@@ -5,15 +5,21 @@ Version: 0.2.11
 Date: 2016-11-02
 Authors@R: person("Hiren", "Joshi", email = "knoter@glycocode.com",
                   role = c("aut", "cre"))
-Description: Massages output from knitr so that the output is in a format that can be more easily uploaded to OneNote. Provides facility for upload of massaged HTML to OneNote servers
+Description: Massages output from knitr so that the output is in a format that
+    can be more easily uploaded to OneNote. Provides facility for upload of massaged
+    HTML to OneNote servers
 License: LGPL
 Imports:
-	xtable,
-	XML,
-	knitr
+    xtable,
+    XML,
+    knitr
 Suggests:
-	XLConnect,
-	markdown,
-	httr,
-	testthat
+    XLConnect,
+    grid,
+    ggplot2,
+    gridExtra,
+    markdown,
+    httr,
+    testthat
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1

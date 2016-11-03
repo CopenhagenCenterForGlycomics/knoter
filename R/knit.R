@@ -44,6 +44,35 @@ table <- function(dataframe) {
   assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,parent.frame())
 }
 
+render = function (x, ...) {
+  UseMethod("render", x)
+}
+
+render.grob = function(grob) {
+  grid::grid.draw(grob)
+}
+
+render.ggplot = function(ggplot) {
+  ggplot2:::print.ggplot(ggplot)
+}
+
+#' Mark a list of plots to be turned into a multi-page PDF
+#'
+#' @param plots List of plots to convert into a single PDF
+#' @seealso \code{\link{knit}}
+#' @export
+multipage <- function(plots) {
+  if (! requireNamespace('gridExtra',quietly=T)) {
+    message("Missing gridExtra library, not combining PDF")
+    return (plots)
+  }
+  plotlist = do.call(gridExtra::marrangeGrob,c(list(all_plots),ncol=1,nrow=1,list(top=NULL)))
+  class(plotlist) <- "multipage"
+  varid <- substring(tempfile(pattern="multipage",tmpdir=''),2)
+  assign( variable_name_for_class("multipage",parent.frame()) ,plotlist,parent.frame())
+  return (render(plots[[1]]))
+}
+
 extract_source_excel_block <- function(tags) {
   root <- XML::htmlParse(paste(tags,collapse=''),asText=T)
   source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")[[1]]
@@ -96,6 +125,17 @@ write_workbook <- function(data,filename) {
     XLConnect::writeWorksheet(output,data[[sheet]],sheet=sheet)
   }
   XLConnect::saveWorkbook(output)
+}
+
+write_multipage_plots <- function(plotlists,options) {
+  sapply(1:length(plotlists),function(idx) {
+    filename = knitr::fig_path(paste('',idx,'multi.pdf',sep='.'),options,number=NULL)
+    plotlist = plotlists[[idx]]
+    pdf(file=filename,width=options$fig.width %n% 5L,height=options$fig.height %n% 5L)
+    lapply(plotlist, function(plot) { grid::grid.newpage(); grid::grid.draw(plot); })
+    dev.off()
+    filename
+  })
 }
 
 fix_escaping <- function(html) {
@@ -262,10 +302,25 @@ knit <- function(...,append.meta.created=T) {
         return (table_data)
       }
     }
+  },make.multipage=function(before,options,envir) {
+    if ( ! before) {
+      plots = get_objects_with_class('multipage',envir)
+      if (length(plots) > 0) {
+        filenames=write_multipage_plots(plots,options)
+        return(paste(sapply(filenames,function(filename) {
+          paste('<object type="application/pdf" data="file://',
+             filename,
+             '" data-attachment="',
+             options$label,
+             '.pdf"></object></div><div class="rcode">\n'
+          ,sep='')
+        }),collapse=''))
+      }
+    }
   })
   knitr::render_html()
 
-  knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F)),data.path='data/')
+  knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='data/')
   if (requireNamespace('XLConnect',quietly=T)) {
     knitr::opts_chunk$set(check.excel=T)
     knitr::opts_knit$set(eval.after = 'check.excel')
@@ -273,6 +328,7 @@ knit <- function(...,append.meta.created=T) {
     message("XLConnect is not installed, not writing Excel files")
   }
   knitr::opts_chunk$set(make.tables=T)
+  knitr::opts_chunk$set(make.multipage=T)
   old_chunk <- knitr::knit_hooks$get('chunk')
   old_source <- knitr::knit_hooks$get('source')
   knitr::knit_hooks$set(plot=function(x,options) {
