@@ -66,7 +66,7 @@ multipage <- function(plots) {
     message("Missing gridExtra library, not combining PDF")
     return (plots)
   }
-  plotlist = do.call(gridExtra::marrangeGrob,c(list(all_plots),ncol=1,nrow=1,list(top=NULL)))
+  plotlist = do.call(gridExtra::marrangeGrob,c(list(plots),ncol=1,nrow=1,list(top=NULL)))
   class(plotlist) <- "multipage"
   varid <- substring(tempfile(pattern="multipage",tmpdir=''),2)
   assign( variable_name_for_class("multipage",parent.frame()) ,plotlist,parent.frame())
