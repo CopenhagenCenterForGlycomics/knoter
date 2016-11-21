@@ -1,8 +1,8 @@
 Package: knoter
 Type: Package
 Title: OneNote HTML Format Output
-Version: 0.3
-Date: 2016-11-03
+Version: 0.3.1
+Date: 2016-11-21
 Authors@R: person("Hiren", "Joshi", email = "knoter@glycocode.com",
                   role = c("aut", "cre"))
 Description: Massages output from knitr so that the output is in a format that
