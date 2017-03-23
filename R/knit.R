@@ -357,11 +357,11 @@ knit <- function(...,append.meta.created=T) {
     }
     x <- old_chunk(x,options)
     x = gsub(' +\n','\n',x)
-    return( paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='') )
+    return( paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n+","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='') )
   },source=function(x,options) {
     x <- old_source(x,options)
     x = gsub(' +\n','\n',x)
-    paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
+    paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n+","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
   });
   return (do.call(knitr::knit,args))
 }
