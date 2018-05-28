@@ -38,7 +38,7 @@ knote <- function(...,notebook,section) {
 	knitted = knoter::knit(...)
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=F)
 	if ( ! is.null(notebook) && ! is.null(section)) {
-		upload_files(notebook,section,files)		
+		upload_files(notebook,section,files)
 	}
 
 	NULL

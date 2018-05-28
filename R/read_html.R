@@ -45,7 +45,7 @@ inline_css <- function(root) {
 style_pre_tags <- function(root) {
     pres = XML::getNodeSet(root,'//pre[@class="knitr r"]')
     sapply(pres,function(pre_node) {
-        XML::xmlAttrs(pre_node) <- c(style="font-family: Courier;")
+        XML::xmlAttrs(pre_node) <- c(style="font-family: Courier; font-size: 4px;")
         XML::xmlName(pre_node) <- 'div'
     })
 }

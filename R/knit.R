@@ -207,7 +207,7 @@ file_is_markdown <- function(input,text=NULL) {
     return(TRUE)
   }
 
-  pat = knitr::all_patterns[['md']][['inline.code']]
+  pat = '`r[ #]([^`]+)\\s*`' #knitr::all_patterns[['md']][['inline.code']]
 
   if (is.character(text) && length(grep(pat, text))) {
     return(TRUE)
