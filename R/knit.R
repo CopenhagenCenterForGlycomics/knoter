@@ -281,22 +281,15 @@ knit <- function(...,append.meta.created=T) {
     if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
       XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
     }
-    pre_elements = XML::getNodeSet(root,"//pre[not(span)]")
-    if ( ! is.null(pre_elements) ) {
-      for (pre in pre_elements) {
-        child_names = names(XML::xmlChildren(pre))
-        if (length(child_names) == 1 & child_names[[1]] == 'text') {
-          old_text = XML::xmlValue(pre)
-          new_text = gsub('\n','#br#\n',old_text)
-          old_text_node = XML::xmlChildren(pre)[[1]]
-          XML::removeNodes(old_text_node)
-          XML::addChildren(pre,XML::newXMLTextNode(new_text,escapeEntities=F,addFinalizer=T))
-        }
-      }
+    pre_element_text = XML::getNodeSet(root,"//pre/text()")
+    for ( pre_text in pre_element_text ) {
+      old_text = XML::xmlValue(pre_text)
+      XML::xmlValue(pre_text) = gsub('\n','#br#\n',old_text)
     }
 
     text = XML::saveXML(root)
     text = gsub('nbsp','&nbsp;',text)
+    text = gsub('#br#\n*</pre>','</pre>',text)
     text = gsub('#br#','<br/>',text)
 
     XML::free(root)
