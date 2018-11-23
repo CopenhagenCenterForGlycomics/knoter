@@ -1,5 +1,5 @@
 
-api_url_base <- 'https://www.onenote.com/api/v1.0/'
+api_url_base <- 'https://graph.microsoft.com/v1.0/me/onenote/'
 
 
 list_notebooks <- function() {

@@ -51,7 +51,7 @@ RequestToken <- R6::R6Class("RequestToken", inherit = httr::Token2.0, list(
   }
 ))
 
-DEFAULT_CLIENT_ID <- '000000004414F678'
+DEFAULT_CLIENT_ID <- 'ea21f153-ff9a-45f9-9044-74c2e142a4af'
 
 # @importFrom httr oauth_endpoint
 # @importFrom httr oauth_app
@@ -84,16 +84,16 @@ doSignin <- function(client_id,client_secret=NULL) {
     return(list(access_token=getOption("knoter_current_token")))
   }
 
-  login.live <- httr::oauth_endpoint(authorize="https://login.live.com/oauth20_authorize.srf",access="https://login.live.com/oauth20_token.srf")
+  login.microsoft <- httr::oauth_endpoint(authorize="https://login.microsoftonline.com/common/oauth2/v2.0/authorize",access="https://login.microsoftonline.com/common/oauth2/v2.0/token")
 
   # https://login.live.com/oauth20_desktop.srf
   onenote.app <- httr::oauth_app("onenote",key=client_id,secret=client_secret)
-  scopes = c('office.onenote_create','office.onenote_update')
+  scopes = c('Notes.Create','Notes.ReadWrite')
 
   if (! is.null(client_secret)) {
-    token <- httr::oauth2.0_token(login.live,onenote.app,scope=c(scopes,'wl.offline_access'))
+    token <- httr::oauth2.0_token(login.microsoft,onenote.app,scope=c(scopes,'offline_access'))
   } else {
-    token <- RequestToken$new(onenote.app,login.live,params = list(use_oob = F, scope = scopes, type = NULL, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html",as_header=T) )
+    token <- RequestToken$new(onenote.app,login.microsoft,params = list(use_oob = F, scope = scopes, type = NULL, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html",as_header=T) )
   }
   assign('current_token', token, envir=cacheEnv)
 	return (token)
