@@ -88,7 +88,7 @@ doSignin <- function(client_id,client_secret=NULL) {
 
   # https://login.live.com/oauth20_desktop.srf
   onenote.app <- httr::oauth_app("onenote",key=client_id,secret=client_secret)
-  scopes = c('Notes.Create','Notes.ReadWrite')
+  scopes = c('Notes.Create','Notes.ReadWrite.All','Sites.Read.All')
 
   if (! is.null(client_secret)) {
     token <- httr::oauth2.0_token(login.microsoft,onenote.app,scope=c(scopes,'offline_access'))

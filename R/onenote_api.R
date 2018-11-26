@@ -1,7 +1,14 @@
 
 api_url_base <- 'https://graph.microsoft.com/v1.0/me/onenote/'
 
-
+#' List of all available OneNote notebooks
+#'
+#' @examples
+#' # Get all the notebooks on the server
+#' \dontrun{
+#' knoter::list_notebooks()
+#' }
+#' @export
 list_notebooks <- function() {
 	data <- do_api_call(url='notebooks', query=list(select= 'name'))
 	if (! is.null(data) ) {
@@ -17,6 +24,28 @@ list_sections <- function(notebook) {
 			return(as.character(unlist(datas)))
 		}
 	}
+}
+
+get_sharepoint_id <- function(sharepoint_url) {
+	url_parts = httr::parse_url(sharepoint_url)
+	res = do_api_call(url=paste(url_parts$hostname,':/',url_parts$path,sep=''),method="get",base='https://graph.microsoft.com/v1.0/sites/')
+	if ( ! is.null(res) ) {
+	  message(paste('Enabling SharePoint',res$name,res$description))
+	  return(res$id)
+	}
+	stop('Could not get SharePoint site id')
+}
+
+#' Enable reading/writing of Notebooks from a SharePoint site
+#'
+#' @examples
+#' # Enable the SharePoint site at the given URL
+#' \dontrun{
+#' knoter::enable_sharepoint('https://xxxx.sharepoint.com/sites/MySite')
+#' }
+#' @export
+enable_sharepoint <- function(sharepoint_url) {
+  api_url_base <<- paste('https://graph.microsoft.com/v1.0/sites/',get_sharepoint_id(sharepoint_url),'/onenote/',sep='')
 }
 
 get_target_id <- function(notebook,section=NULL,page=NULL) {
@@ -85,18 +114,18 @@ handle_http_errors <- function(response) {
 	}
 }
 
-do_api_call <- function(url,method='get',...) {
+do_api_call <- function(url,method='get',base=api_url_base,...) {
 	access_info <- doSignin()
 	if (method == 'get') {
-		resp = httr::GET(paste(api_url_base,url,sep=''),...,httr::config(token=access_info))
+		resp = httr::GET(paste(base,url,sep=''),...,httr::config(token=access_info))
 		handle_http_errors(resp)
 	}
 	if (method == 'post') {
-		resp = httr::POST(paste(api_url_base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		resp = httr::POST(paste(base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'patch') {
-		resp = httr::PATCH(paste(api_url_base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		resp = httr::PATCH(paste(base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	return (httr::content(resp))
