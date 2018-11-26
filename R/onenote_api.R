@@ -1,5 +1,7 @@
 
-api_url_base <- 'https://graph.microsoft.com/v1.0/me/onenote/'
+globals = new.env()
+
+assign('api_url_base','https://graph.microsoft.com/v1.0/me/onenote/',globals)
 
 #' List of all available OneNote notebooks
 #'
@@ -45,7 +47,7 @@ get_sharepoint_id <- function(sharepoint_url) {
 #' }
 #' @export
 enable_sharepoint <- function(sharepoint_url) {
-  api_url_base <<- paste('https://graph.microsoft.com/v1.0/sites/',get_sharepoint_id(sharepoint_url),'/onenote/',sep='')
+  assign('api_url_base',paste('https://graph.microsoft.com/v1.0/sites/',get_sharepoint_id(sharepoint_url),'/onenote/',sep=''),envir=globals)
 }
 
 get_target_id <- function(notebook,section=NULL,page=NULL) {
@@ -114,7 +116,7 @@ handle_http_errors <- function(response) {
 	}
 }
 
-do_api_call <- function(url,method='get',base=api_url_base,...) {
+do_api_call <- function(url,method='get',base=get('api_url_base',globals),...) {
 	access_info <- doSignin()
 	if (method == 'get') {
 		resp = httr::GET(paste(base,url,sep=''),...,httr::config(token=access_info))
