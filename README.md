@@ -7,7 +7,7 @@ Knoter is an accessory library to the venerable [Knitr](https://github.com/yihui
 The development version of the tool can be installed using devtools
 
 ```R
-    devtools::install_github('hirenj/knoter')
+    devtools::install_github('CopenhagenCenterForGlycomics/knoter')
 ```
 
 ### Basic Usage
