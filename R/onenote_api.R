@@ -141,6 +141,13 @@ handle_http_errors <- function(response) {
 		return ()
 	}
 	if (status_code >= 400 && status_code < 500) {
+		if (httr::has_content(response)) {
+			error_message = httr::content(response,as="parsed")$error$message
+			if (error_message == 'Maximum request length exceeded.') {
+				stop("Total page size too large - consider reducing size")
+			}
+			stop(paste('Server gave error',status_code,error_message))
+		}
 		stop("Not authorized to do this on the server")
 	}
 	if (status_code >= 500) {

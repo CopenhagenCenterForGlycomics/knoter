@@ -115,7 +115,11 @@ read_html <- function(html,asText,fragment.only=F) {
     files[['Presentation']] <- string_to_file_upload( 'Presentation', element_to_save, 'application/xhtml+xml' )
     for (attachment in to_attach) {
         mime = mime::guess_type(URLdecode(attachment$filename))
-        files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
+        if (file.info(URLdecode(attachment$filename))$size <= 2*1024*1024) {
+            files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
+        } else {
+            message(paste(URLdecode(attachment$filename),'is too large (> 2MB), skipping',sep=' '))
+        }
     }
     files
 }
