@@ -114,8 +114,8 @@ read_html <- function(html,asText,fragment.only=F) {
     files = list()
     files[['Presentation']] <- string_to_file_upload( 'Presentation', element_to_save, 'application/xhtml+xml' )
     for (attachment in to_attach) {
-        mime = mime::guess_type(attachment$filename)
-        files[[attachment$part_id]] <- httr::upload_file(attachment$filename,mime)
+        mime = mime::guess_type(URLdecode(attachment$filename))
+        files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
     }
     files
 }
