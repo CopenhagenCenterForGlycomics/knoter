@@ -32,6 +32,43 @@ Or, if you'd like to append some Markdown to a page
 
 This will append a header, and a paragraph with some inline R to the page `My Page`.
 
+### Attachments
+
+When sharing reports for datasets there are two important artefacts that often have a life beyond the
+original report that they are embedded in. Tabular data and generated figures are often either embedded
+within other things (such as manuscripts). To make this easier, there are three functions that can be
+used within a code block, `excel`, `table` and `multipage`
+
+#### excel
+
+If you want to attach an Excel workbook with sets of tabular data to your OneNote, you can use this function
+to write the Excel workbook.
+
+```R
+	excel(Cars_sheet=cars,CO2_sheet=CO2)
+```
+
+#### table
+
+If you have tabular data that you would like OneNote to display properly, you can use the table function, which
+will add the correct formatting to show a table in OneNote.
+
+```R
+	table(cars)
+```
+
+#### multipage
+
+If you have a lot of plots that you want to generate as PDF and attach to OneNote, but don't actually want to
+have an image inserted for every one of them, you can use this function to tell knoter to write the multipage PDF
+and then only insert an image for the first plot
+
+```R
+	# Only plot1 will appear in the output
+	multipage(list(plot1,plot2,plot3))
+```
+
+
 ### SharePoint libraries
 
 If you have your notebooks sitting on a SharePoint library, you can ask knoter to write to that location with the
