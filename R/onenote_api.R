@@ -104,13 +104,26 @@ get_target_id <- function(notebook,section=NULL,page=NULL) {
 	return()
 }
 
+create_section <- function(notebook_name,section_name) {
+	notebook_id = get_target_id(notebook_name)
+	if ( ! is.null(notebook_id) ) {
+		resp = do_api_call(url=paste('notebooks/',notebook_id,'/sections',sep=''), method="post_json", body= list(displayName=section_name))
+		if ( ! is.null(resp) ) {
+			return(resp$id)
+		}
+	}
+	return()
+}
+
 upload_files <- function(notebook_name,section_name,files=list(),sharepoint=NULL) {
 	if ( ! is.null(sharepoint) ) {
 		enable_sharepoint(sharepoint)
 	}
 
 	section_id = get_target_id(notebook_name,section_name)
-
+	if ( is.null(section_id) ) {
+		section_id = create_section(notebook_name,section_name)
+	}
 	if ( ! is.null(section_id) && length(files) > 0 ) {
 		do_api_call(paste( 'sections/',section_id,'/pages',sep=''), method='post', body=files)
 	}
@@ -163,6 +176,10 @@ do_api_call <- function(url,method='get',base=get('api_url_base',globals),...) {
 	}
 	if (method == 'post') {
 		resp = httr::POST(paste(base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		handle_http_errors(resp)
+	}
+	if (method == 'post_json') {
+		resp = httr::POST(paste(base,url,sep=''),encode="json",httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'patch') {
