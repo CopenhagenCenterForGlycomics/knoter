@@ -31,7 +31,7 @@
 #' knoter::knote(text=rmd_text,notebook='My Notebook', section='My section')
 #' }
 #' @export
-knote <- function(...,notebook,section) {
+knote <- function(...,notebook,section,sharepoint=NULL) {
 	arguments = list(...)
 	file_output = arguments[['output']]
 
@@ -68,14 +68,14 @@ knote <- function(...,notebook,section) {
 #' knoter::knote.append(text=rmd_text,notebook='My Notebook', section='My section',page='My first page')
 #' }
 #' @export
-knote.append <- function(...,notebook,section,page) {
+knote.append <- function(...,notebook,section,page,sharepoint=NULL) {
 	arguments = list(...)
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=T)
 	if ( ! is.null(notebook) && ! is.null(section) && ! is.null(page) ) {
-		patch_page(notebook,section,page,files)
+		patch_page(notebook,section,page,files,sharepoint)
 	}
 
 	NULL

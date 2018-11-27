@@ -32,6 +32,15 @@ Or, if you'd like to append some Markdown to a page
 
 This will append a header, and a paragraph with some inline R to the page `My Page`.
 
+### SharePoint libraries
+
+If you have your notebooks sitting on a SharePoint library, you can ask knoter to write to that location with the
+`sharepoint` parameter.
+
+```R
+	knoter::knote('example.Rhtml',notebook='My SharePoint Notebook',section='My Section',sharepoint="https://hostname.sharepoint.com/sites/MySite")
+```
+
 ### Limitations
 
 OneNote only supports a subset of HTML for uploading into their notebooks. As long as you stick to a relatively simple subset of tags (see: [Tag support](#Tags)), the upload should work. Inline style attributes are likely to be removed, so don't count on the availability of styling.

@@ -1,8 +1,6 @@
 
 globals = new.env()
 
-assign('api_url_base','https://graph.microsoft.com/v1.0/me/onenote/',globals)
-
 #' List of all available OneNote notebooks
 #'
 #' @examples
@@ -11,8 +9,14 @@ assign('api_url_base','https://graph.microsoft.com/v1.0/me/onenote/',globals)
 #' knoter::list_notebooks()
 #' }
 #' @export
-list_notebooks <- function() {
+list_notebooks <- function(sharepoint=NULL) {
+	if ( ! is.null(sharepoint) ) {
+		enable_sharepoint(sharepoint)
+	}
 	data <- do_api_call(url='notebooks', query=list(select= 'name'))
+
+	use_default_endpoint()
+
 	if (! is.null(data) ) {
 		return(as.character(unlist(data$value)))
 	}
@@ -47,60 +51,88 @@ get_sharepoint_id <- function(sharepoint_url) {
 #' }
 #' @export
 enable_sharepoint <- function(sharepoint_url) {
-  assign('api_url_base',paste('https://graph.microsoft.com/v1.0/sites/',get_sharepoint_id(sharepoint_url),'/onenote/',sep=''),envir=globals)
+	assign('api_url_base',paste('https://graph.microsoft.com/v1.0/sites/',get_sharepoint_id(sharepoint_url),'/onenote/',sep=''),envir=globals)
+}
+
+use_default_endpoint <- function() {
+	assign('api_url_base','https://graph.microsoft.com/v1.0/me/onenote/',globals)
+}
+
+use_default_endpoint()
+
+quote_list <- function(strings) {
+	paste('"',strings,'"',sep='',collapse='\n')
 }
 
 get_target_id <- function(notebook,section=NULL,page=NULL) {
 	notebook_id = NULL
 	section_id = NULL
 	datas = do_api_call(url='notebooks', method="get", query=list(filter= paste("tolower(name) eq \'",tolower(notebook),"\'",sep='') ,select='id'))$value
-	if ( ! is.null(datas) ) {
+	if ( ! is.null(datas) && length(datas) > 0 ) {
 		notebook_id = datas[[1]]$id
+	} else {
+		warning('Could not find notebook "',notebook,'", available notebooks are:\n\n',quote_list(list_notebooks()),'\n')
 	}
 	if (is.null(section) && is.null(page)) {
 		return(notebook_id)
 	}
 	if (!is.null(section) && !is.null(notebook_id)) {
 		datas = do_api_call(url=paste('notebooks/',notebook_id,'/sections',sep=''), method="get",query=list(filter=paste( "tolower(name) eq \'",tolower(section),"\'",sep='' ) , select ='id,pages' ))$value
-		if (! is.null(datas)) {
+		if (! is.null(datas) && length(datas) > 0) {
 			section_id = datas[[1]]$id
+		} else {
+			warning('Could not find section in "',notebook,'", available sections are:\n\n',quote_list(list_sections(notebook)),'\n')
 		}
 	}
 	if (is.null(page)) {
 		return(section_id)
 	}
-
 	if (!is.null(section_id)) {
 		datas = do_api_call(url=paste('sections/',section_id,'/pages',sep=''), method="get",query=list( select ='id,title' ))$value
-		if (! is.null(datas)) {
+		if (! is.null(datas) & length(datas) > 0) {
 			for (page_data in datas) {
 				if (tolower(page_data['title']) == tolower(page)) {
 					return (page_data$id)
 				}
 			}
+			warning('Could not find page in section "',section,'", available pages are:\n\n',quote_list(sapply(datas, function(x) x['title'])),'\n')
+		} else {
+			warning('Could not find page in section "',section,'", no available pages')
 		}
 
 	}
-
+	return()
 }
 
-upload_files <- function(notebook_name,section_name,files=list()) {
+upload_files <- function(notebook_name,section_name,files=list(),sharepoint=NULL) {
+	if ( ! is.null(sharepoint) ) {
+		enable_sharepoint(sharepoint)
+	}
+
 	section_id = get_target_id(notebook_name,section_name)
+
 	if ( ! is.null(section_id) && length(files) > 0 ) {
 		do_api_call(paste( 'sections/',section_id,'/pages',sep=''), method='post', body=files)
 	}
 
+	use_default_endpoint()
 }
 
-patch_page <- function(notebook_name,section_name,page_name,files=list()) {
+patch_page <- function(notebook_name,section_name,page_name,files=list(),sharepoint=NULL) {
+	if ( ! is.null(sharepoint) ) {
+		enable_sharepoint(sharepoint)
+	}
+
 	page_id = get_target_id(notebook_name,section_name,page_name)
 	if ( ! is.null(page_id) && length(files) > 0) {
 		names(files)[1] <- 'Commands'
 		files[[1]] <- string_to_file_upload( 'Commands', paste("[{'target':'body','action':'append','content':'", gsub('"','\\\\"', gsub("'","\\\\'", readChar(files[[1]]$path,file.info(files[[1]]$path)$size) )) ,"'}]"), 'application/json' )
 		results = do_api_call(paste('pages/',page_id,'/content',sep=''),method='patch',body=files)
 	} else {
-		message("Cannot get Page ID")
+		warning("Cannot get Page ID")
 	}
+
+	use_default_endpoint()
 }
 
 handle_http_errors <- function(response) {
