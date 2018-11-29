@@ -80,12 +80,14 @@ style_source_tags <- function(root) {
     })
 }
 
-read_html <- function(html,asText,fragment.only=F) {
+read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
     root <- XML::htmlParse(html,asText=asText)
 
     inline_css(root)
     style_pre_tags(root)
     style_source_tags(root)
+
+    head_text = XML::saveXML(XML::getNodeSet(root,'//head')[[1]],doctype=NULL)
 
     elements_to_read <- c( XML::getNodeSet(root, '//img[not(starts-with(@src, "http"))]') , XML::getNodeSet(root,'//object[starts-with(@data, "file://")]') )
     to_attach <- list()
@@ -103,23 +105,38 @@ read_html <- function(html,asText,fragment.only=F) {
         to_attach[[length(to_attach)+1]] <- list(part_id=part_id, filename=  gsub("file://",'', filename,fixed=T) )
     }
     element_to_save = NULL
+    additional_elements = NULL
+
+    chunks = XML::getNodeSet(root,'//body/*')
+    chunk_length = ifelse(do.chunk,10,length(chunks))
+    chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,unlist(sapply(1:chunk_length, function(x) rep(x,chunk_length),simplify=F)),drop=T)))
+#XML::saveXML(root,doctype=NULL)
     if (! fragment.only) {
-        element_to_save = paste('<?xml version="1.0" encoding="utf-8" ?>\n', XML::saveXML(root,doctype=NULL),sep='')
+        element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')
+        additional_elements = sapply( chunk_groups[2:length(chunk_groups)], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
     } else {
         target_node = XML::getNodeSet(root,'//body')[[1]]
         XML::xmlName(target_node) <- 'div'
         element_to_save = XML::saveXML(target_node)
     }
-    element_to_save =gsub(intToUtf8(0x00a0L),'&nbsp;',element_to_save)
-    files = list()
-    files[['Presentation']] <- string_to_file_upload( 'Presentation', element_to_save, 'application/xhtml+xml' )
-    for (attachment in to_attach) {
-        mime = mime::guess_type(URLdecode(attachment$filename))
-        if (file.info(URLdecode(attachment$filename))$size <= 2*1024*1024) {
-            files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
-        } else {
-            message(paste(URLdecode(attachment$filename),'is too large (> 2MB), skipping',sep=' '))
+    html_blocks = sapply(list(c(element_to_save,additional_elements)), function(htmlblock) { gsub(intToUtf8(0x00a0L),'&nbsp;',htmlblock) })
+    filesets = lapply(html_blocks, function(html_block) {
+        files = list()
+        files[['Presentation']] <- string_to_file_upload( 'Presentation', html_block, 'application/xhtml+xml' )
+        to_attach = Filter(function(x) !is.null(x),Filter(function(file) {  grepl(file$part_id, html_block) },to_attach))
+        for (attachment in to_attach) {
+            mime = mime::guess_type(URLdecode(attachment$filename))
+            if (file.info(URLdecode(attachment$filename))$size <= 2*1024*1024) {
+                files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
+            } else {
+                message(paste(URLdecode(attachment$filename),'is too large (> 2MB), skipping',sep=' '))
+            }
         }
+        files
+    })
+    toattach=filesets[[1]]
+    if (length(filesets) > 1) {
+        attributes(toattach)$extrablocks = filesets[2:length(filesets)]
     }
-    files
+    toattach
 }

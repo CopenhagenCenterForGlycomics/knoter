@@ -38,10 +38,24 @@ knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F) {
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
-	files = read_html(knitted,asText=is.null(file_output),fragment.only=F)
+	files = read_html(knitted,asText=is.null(file_output),fragment.only=F,do.chunk=T)
 
-	perform_upload(files,notebook,section,sharepoint,auto.archive)
+	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
+	if ('extrablocks' %in% names(attributes(files))) {
+		if ( ! is.null(sharepoint) ) {
+			enable_sharepoint(sharepoint)
+		}
 
+		message('Waiting for Page to appear')
+		Sys.sleep(10)
+
+		for (extrablock in attributes(files)$extrablocks) {
+			patch_page_by_id(added$id,extrablock)
+		}
+
+		use_default_endpoint()
+
+	}
 	NULL
 }
 
@@ -56,8 +70,24 @@ knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F) {
 #' @param auto.archive Flag for automatically demoting pages when a new page with the same title is uploaded
 #' @export
 knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F) {
-	files = read_html(file,asText=F,fragment.only=F)
-	perform_upload(files,notebook,section,sharepoint,auto.archive)
+	files = read_html(file,asText=F,fragment.only=F,do.chunk=T)
+	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
+
+	if ('extrablocks' %in% names(attributes(files))) {
+		if ( ! is.null(sharepoint) ) {
+			enable_sharepoint(sharepoint)
+		}
+
+		message('Waiting for Page to appear')
+		Sys.sleep(10)
+
+		for (extrablock in attributes(files)$extrablocks) {
+			patch_page_by_id(added$id,extrablock)
+		}
+
+		use_default_endpoint()
+
+	}
 	NULL
 }
 
@@ -117,7 +147,7 @@ knote.append <- function(...,notebook,section,page,sharepoint=NULL) {
 
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=T)
 	if ( ! is.null(notebook) && ! is.null(section) && ! is.null(page) ) {
-		patch_page(notebook,section,page,files,sharepoint)
+		patch_page(notebook,section,page,files)
 	}
 
 	use_default_endpoint()

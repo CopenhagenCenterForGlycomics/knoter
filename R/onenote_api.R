@@ -144,9 +144,13 @@ set_page_level <- function(page_ids,level=1) {
 
 }
 
-patch_page <- function(notebook_name,section_name,page_name,files=list(),sharepoint=NULL) {
 
+patch_page <- function(notebook_name,section_name,page_name,files=list()) {
 	page_id = get_target_id(notebook_name,section_name,page_name)
+	patch_page_by_id(page_id,files)
+}
+
+patch_page_by_id <- function(page_id,files=list()) {
 	if ( ! is.null(page_id) && length(files) > 0) {
 		names(files)[1] <- 'Commands'
 		files[[1]] <- string_to_file_upload( 'Commands', paste("[{'target':'body','action':'append','content':'", gsub('"','\\\\"', gsub("'","\\\\'", readChar(files[[1]]$path,file.info(files[[1]]$path)$size) )) ,"'}]"), 'application/json' )
