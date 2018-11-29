@@ -115,26 +115,36 @@ create_section <- function(notebook_name,section_name) {
 	return()
 }
 
-upload_files <- function(notebook_name,section_name,files=list(),sharepoint=NULL) {
-	if ( ! is.null(sharepoint) ) {
-		enable_sharepoint(sharepoint)
-	}
+list_page_ids <- function(notebook,section) {
 
+	section_id = get_target_id(notebook,section)
+
+	res = do_api_call(url=paste('sections/',section_id,'/pages',sep=''), method="get",query=list( select ='id,title' ))$value
+
+	return (res)
+}
+
+upload_files <- function(notebook_name,section_name,files=list()) {
 	section_id = get_target_id(notebook_name,section_name)
 	if ( is.null(section_id) ) {
 		section_id = create_section(notebook_name,section_name)
 	}
 	if ( ! is.null(section_id) && length(files) > 0 ) {
-		do_api_call(paste( 'sections/',section_id,'/pages',sep=''), method='post', body=files)
+		res=do_api_call(paste( 'sections/',section_id,'/pages',sep=''), method='post', body=files)
 	}
 
-	use_default_endpoint()
+	res
+}
+
+set_page_level <- function(page_ids,level=1) {
+
+	for (page in page_ids) {
+		do_api_call(paste( 'pages/',page,sep=''), method='patch_json', body=list(level=as.character(level)))
+	}
+
 }
 
 patch_page <- function(notebook_name,section_name,page_name,files=list(),sharepoint=NULL) {
-	if ( ! is.null(sharepoint) ) {
-		enable_sharepoint(sharepoint)
-	}
 
 	page_id = get_target_id(notebook_name,section_name,page_name)
 	if ( ! is.null(page_id) && length(files) > 0) {
@@ -145,7 +155,6 @@ patch_page <- function(notebook_name,section_name,page_name,files=list(),sharepo
 		warning("Cannot get Page ID")
 	}
 
-	use_default_endpoint()
 }
 
 handle_http_errors <- function(response) {
@@ -158,6 +167,10 @@ handle_http_errors <- function(response) {
 			error_message = httr::content(response,as="parsed")$error$message
 			if (error_message == 'Maximum request length exceeded.') {
 				stop("Total page size too large - consider reducing size")
+			}
+			if (error_message == 'Cannot change the level of the first page in a section') {
+				warning('Cannot set level for first page in section')
+				return()
 			}
 			stop(paste('Server gave error',status_code,error_message))
 		}
@@ -180,6 +193,10 @@ do_api_call <- function(url,method='get',base=get('api_url_base',globals),...) {
 	}
 	if (method == 'post_json') {
 		resp = httr::POST(paste(base,url,sep=''),encode="json",httr::config(token=access_info),...)
+		handle_http_errors(resp)
+	}
+	if (method == 'patch_json') {
+		resp = httr::PATCH(paste(base,url,sep=''),encode="json",httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'patch') {

@@ -16,7 +16,9 @@
 #'
 #' @param ... Parameters passed on to \code{\link[knoter]{knit}}
 #' @param notebook Name of notebook to upload page to
-#' @param section Name of section to upload page to
+#' @param section Name of section to upload page to, if the section does not exist, it is created.
+#' @param sharepoint Optional URL for SharePoint site to upload to
+#' @param auto.archive Flag for automatically demoting pages when a new page with the same title is uploaded
 #' @seealso \code{\link[knitr]{knit}}
 #' @examples
 #' \dontrun{
@@ -31,17 +33,51 @@
 #' knoter::knote(text=rmd_text,notebook='My Notebook', section='My section')
 #' }
 #' @export
-knote <- function(...,notebook,section,sharepoint=NULL) {
+knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F) {
 	arguments = list(...)
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=F)
-	if ( ! is.null(notebook) && ! is.null(section)) {
-		upload_files(notebook,section,files,sharepoint)
-	}
+
+	perform_upload(files,notebook,section,sharepoint,auto.archive)
 
 	NULL
+}
+
+#' Upload a pre-generated HTML file to OneNote
+#'
+#' No validation is performed on the input HTML, so the upload
+#' may fail due to the formatting of the HTML.
+#' @param file Path to HTML file to read in
+#' @param notebook Name of notebook to upload page to
+#' @param section Name of section to upload page to, if the section does not exist, it is created
+#' @param sharepoint Optional URL for SharePoint site to upload to
+#' @param auto.archive Flag for automatically demoting pages when a new page with the same title is uploaded
+#' @export
+knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F) {
+	files = read_html(file,asText=F,fragment.only=F)
+	perform_upload(files,notebook,section,sharepoint,auto.archive)
+	NULL
+}
+
+perform_upload <- function(files,notebook,section,sharepoint,auto.archive) {
+	if ( ! is.null(sharepoint) ) {
+		enable_sharepoint(sharepoint)
+	}
+
+	if ( ! is.null(notebook) && ! is.null(section)) {
+		new_page = upload_files(notebook,section,files)
+		if ( auto.archive && ! is.null(new_page)) {
+			sibling_pages = Filter(function(page) {  page$id != new_page$id & page$title == new_page$title },list_page_ids(notebook,section))
+			sibling_pages = sapply(sibling_pages, function(page) { page$id })
+			set_page_level(sibling_pages,level=1)
+		}
+	}
+
+	use_default_endpoint()
+
+	new_page
 }
 
 #' Knit a Rhtml or Rmd fragment, and append to a OneNote page
@@ -55,8 +91,9 @@ knote <- function(...,notebook,section,sharepoint=NULL) {
 #'
 #' @param ... Parameters passed on to \code{\link[knoter]{knit}}
 #' @param notebook Name of notebook to find the target page in
-#' @param section Name of section to find the target page in
+#' @param section Name of section to find the target page in. If the section does not exist, it is created
 #' @param page Title of page to append the markup to
+#' @param sharepoint Optional URL for SharePoint site to upload to
 #' @seealso \code{\link[knitr]{knit}}
 #' @examples
 #' # Append a page with the contents of a markdown
@@ -73,10 +110,17 @@ knote.append <- function(...,notebook,section,page,sharepoint=NULL) {
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
+
+	if ( ! is.null(sharepoint) ) {
+		enable_sharepoint(sharepoint)
+	}
+
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=T)
 	if ( ! is.null(notebook) && ! is.null(section) && ! is.null(page) ) {
 		patch_page(notebook,section,page,files,sharepoint)
 	}
+
+	use_default_endpoint()
 
 	NULL
 }
