@@ -38,7 +38,7 @@ excel <- function(...,name=NA) {
 #' @param dataframe Data frame to turn into a HTML table
 #' @seealso \code{\link{knit}}
 #' @export
-table <- function(dataframe) {
+prettytable <- function(dataframe) {
   dataframe <- xtable::xtable(dataframe)
   varid <- substring(tempfile(pattern="xtable",tmpdir=''),2)
   assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,parent.frame())
