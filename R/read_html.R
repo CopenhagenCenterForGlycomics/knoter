@@ -113,7 +113,7 @@ read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
 #XML::saveXML(root,doctype=NULL)
     if (! fragment.only) {
         element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')
-        additional_elements = sapply( chunk_groups[2:length(chunk_groups)], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
+        additional_elements = sapply( chunk_groups[-1], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
     } else {
         target_node = XML::getNodeSet(root,'//body')[[1]]
         XML::xmlName(target_node) <- 'div'
@@ -136,7 +136,7 @@ read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
     })
     toattach=filesets[[1]]
     if (length(filesets) > 1) {
-        attributes(toattach)$extrablocks = filesets[2:length(filesets)]
+        attributes(toattach)$extrablocks = filesets[-1]
     }
     toattach
 }
