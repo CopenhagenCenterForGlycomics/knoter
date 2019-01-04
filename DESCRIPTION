@@ -12,7 +12,7 @@ License: LGPL
 Imports:
     xtable,
     XML,
-    knitr
+    knitr (>=0.2.1)
 Suggests:
     XLConnect,
     grid,
