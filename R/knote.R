@@ -79,7 +79,7 @@ knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F) {
 		}
 
 		message('Waiting for Page to appear')
-		Sys.sleep(10)
+		Sys.sleep(15)
 
 		for (extrablock in attributes(files)$extrablocks) {
 			patch_page_by_id(added$id,extrablock)

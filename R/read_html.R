@@ -109,11 +109,12 @@ read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
 
     chunks = XML::getNodeSet(root,'//body/*')
     chunk_length = ifelse(do.chunk,10,length(chunks))
-    chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,unlist(sapply(1:chunk_length, function(x) rep(x,chunk_length),simplify=F)),drop=T)))
+    chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,cut(1:length(chunks), floor(length(chunks) / chunk_length)+1,labels=F)) ))
+
 #XML::saveXML(root,doctype=NULL)
     if (! fragment.only) {
         element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')
-        additional_elements = sapply( chunk_groups[-1], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
+        additional_elements = sapply( chunk_groups[2:length(chunk_groups)], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
     } else {
         target_node = XML::getNodeSet(root,'//body')[[1]]
         XML::xmlName(target_node) <- 'div'
