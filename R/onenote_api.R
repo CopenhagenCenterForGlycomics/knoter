@@ -170,7 +170,7 @@ handle_http_errors <- function(response) {
 		if (httr::has_content(response)) {
 			error_message = httr::content(response,as="parsed")$error$message
 			if (error_message == 'Maximum request length exceeded.') {
-				stop("Total page size too large - consider reducing size")
+				stop("Total page size too large - try decreasing batch size or consider reducing the size of uploaded files")
 			}
 			if (error_message == 'Cannot change the level of the first page in a section') {
 				warning('Cannot set level for first page in section')

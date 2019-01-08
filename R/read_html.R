@@ -80,7 +80,7 @@ style_source_tags <- function(root) {
     })
 }
 
-read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
+read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
     root <- XML::htmlParse(html,asText=asText)
 
     inline_css(root)
@@ -108,9 +108,8 @@ read_html <- function(html,asText,fragment.only=F,do.chunk=F) {
     additional_elements = NULL
 
     chunks = XML::getNodeSet(root,'//body/*')
-    chunk_length = ifelse(do.chunk,10,length(chunks))
+    chunk_length = ifelse(batch.chunks > 0,batch.chunks,length(chunks))
     chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,cut(1:length(chunks), floor(length(chunks) / chunk_length)+1,labels=F)) ))
-
 #XML::saveXML(root,doctype=NULL)
     if (! fragment.only) {
         element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')

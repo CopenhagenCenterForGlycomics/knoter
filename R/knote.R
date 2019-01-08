@@ -19,6 +19,7 @@
 #' @param section Name of section to upload page to, if the section does not exist, it is created.
 #' @param sharepoint Optional URL for SharePoint site to upload to
 #' @param auto.archive Flag for automatically demoting pages when a new page with the same title is uploaded
+#' @param batch.chunks Batch chunks into groups of this size for upload
 #' @seealso \code{\link[knitr]{knit}}
 #' @examples
 #' \dontrun{
@@ -33,12 +34,12 @@
 #' knoter::knote(text=rmd_text,notebook='My Notebook', section='My section')
 #' }
 #' @export
-knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F) {
+knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
 	arguments = list(...)
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
-	files = read_html(knitted,asText=is.null(file_output),fragment.only=F,do.chunk=T)
+	files = read_html(knitted,asText=is.null(file_output),fragment.only=F,batch.chunks=batch.chunks)
 
 	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
 	if ('extrablocks' %in% names(attributes(files))) {
@@ -68,9 +69,10 @@ knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F) {
 #' @param section Name of section to upload page to, if the section does not exist, it is created
 #' @param sharepoint Optional URL for SharePoint site to upload to
 #' @param auto.archive Flag for automatically demoting pages when a new page with the same title is uploaded
+#' @param batch.chunks Batch chunks into groups of this size for upload
 #' @export
-knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F) {
-	files = read_html(file,asText=F,fragment.only=F,do.chunk=T)
+knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
+	files = read_html(file,asText=F,fragment.only=F,batch.chunks=batch.chunks)
 	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
 
 	if ('extrablocks' %in% names(attributes(files))) {
