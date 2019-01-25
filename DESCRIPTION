@@ -14,7 +14,7 @@ Imports:
     XML,
     knitr (>= 1.21)
 Suggests:
-    xlwrite,
+    writexl,
     grid,
     ggplot2,
     gridExtra,
