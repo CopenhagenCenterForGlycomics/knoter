@@ -118,13 +118,8 @@ write_workbook <- function(data,filename) {
   } else if (file.exists(filename)) {
     file.remove(filename)
   }
-
-  output <- XLConnect::loadWorkbook(filename,create=T)
-  for (sheet in names(data)) {
-    XLConnect::createSheet(output,sheet)
-    XLConnect::writeWorksheet(output,data[[sheet]],sheet=sheet)
-  }
-  XLConnect::saveWorkbook(output)
+  datalist=c(list(),data)
+  writexl::write_xlsx(x=datalist,path=filename,col_names=T,format_headers = T)
 }
 
 write_multipage_plots <- function(plotlists,options) {
@@ -329,11 +324,11 @@ knit <- function(...,append.meta.created=T) {
   knitr::render_html()
 
   knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='data/')
-  if (requireNamespace('XLConnect',quietly=T)) {
+  if (requireNamespace('writexl',quietly=T)) {
     knitr::opts_chunk$set(check.excel=T)
     knitr::opts_knit$set(eval.after = 'check.excel')
   } else {
-    message("XLConnect is not installed, not writing Excel files")
+    message("Library 'writexl' is not installed, not writing Excel files")
   }
   knitr::opts_chunk$set(make.tables=T)
   knitr::opts_chunk$set(make.multipage=T)
