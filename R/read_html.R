@@ -18,12 +18,14 @@ string_to_file_upload <- function(filename,contents,mime) {
 css_def_to_inline <- function(css) {
     attrs = names(css)
     paste(sapply(attrs, function(attr) {
-        paste(attr,":",css[[attr]],";",sep='')
+        cleaned_attr = gsub('&nbsp;',intToUtf8(0x00a0L),css[[attr]])
+        cleaned_name = gsub('&nbsp;',intToUtf8(0x00a0L),attr)
+        paste(cleaned_name,":", cleaned_attr,";",sep='')
     }),collapse=" ")
 }
 
 inline_css <- function(root) {
-    style_nodes = XML::getNodeSet(root,'/html/head/style')
+    style_nodes = XML::getNodeSet(root,'/html//style')
     if (is.null(style_nodes) || length(style_nodes) < 1 ) {
         return()
     }
@@ -33,6 +35,9 @@ inline_css <- function(root) {
           return (knitr:::css.parser(lines=css_lines))
         }
     },simplify=F),recursive=F)
+    if (is.null(css_defs)) {
+        return()
+    }
     css_defs = css_defs[ ! is.null(css_defs) ]
     names(css_defs) <- gsub(' +',' ', gsub('.',' ',names(css_defs),fixed=T))
     spans = XML::getNodeSet(root,'//span[@class]')

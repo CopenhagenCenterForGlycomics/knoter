@@ -75,10 +75,10 @@ multipage <- function(plots) {
 
 extract_source_excel_block <- function(tags) {
   root <- XML::htmlParse(paste(tags,collapse=''),asText=T)
-  source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")[[1]]
+  source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")
   results <- list()
   if (!is.null(source_node)) {
-    results$source_node <- XML::saveXML(source_node)
+    results$source_node <- XML::saveXML(source_node[[1]])
   }
   results$excel_node <- sapply(XML::getNodeSet(root,'//excel/text()'),function(node) { XML::saveXML(node) })
   XML::free(root)
