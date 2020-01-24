@@ -1,7 +1,7 @@
 Package: knoter
 Type: Package
 Title: OneNote HTML Format Output
-Version: 0.5.1
+Version: 0.5.2
 Date: 2020-01-24
 Authors@R: person("Hiren", "Joshi", email = "knoter@glycocode.com",
                   role = c("aut", "cre"))
