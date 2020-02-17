@@ -114,7 +114,7 @@ read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
 
     chunks = XML::getNodeSet(root,'//body/*')
     chunk_length = ifelse(batch.chunks > 0,batch.chunks,length(chunks))
-    chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,cut(1:length(chunks), floor(length(chunks) / chunk_length)+1,labels=F)) ))
+    chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,cut(1:length(chunks), max(floor(length(chunks) / chunk_length)+1,2),labels=F)) ))
 #XML::saveXML(root,doctype=NULL)
     if (! fragment.only) {
         element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')
