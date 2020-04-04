@@ -62,7 +62,7 @@ doSignin <- function(client_id,client_secret=NULL) {
     env_client_id <- Sys.getenv(env_name)
     if (env_client_id != "") {
       client_id <- env_client_id
-      message("Using Client ID stored in environment variable ", env_client_id)
+      message("Using Client ID stored in environment variable ", substr(env_client_id,1,4),"...")
     } else {
       client_id <- DEFAULT_CLIENT_ID
     }
@@ -71,7 +71,7 @@ doSignin <- function(client_id,client_secret=NULL) {
     env_name <- "ONENOTE_CONSUMER_SECRET"
     client_secret <- Sys.getenv(env_name)
     if (client_secret != "") {
-      message("Using Client Secret stored in environment variable ", client_secret)
+      message("Using Client Secret stored in environment variable ", substr(client_secret,1,4),"...")
     } else {
       client_secret <- NULL
     }
@@ -91,7 +91,7 @@ doSignin <- function(client_id,client_secret=NULL) {
   scopes = c('Notes.Create','Notes.ReadWrite.All','Sites.Read.All')
 
   if (! is.null(client_secret)) {
-    token <- httr::oauth2.0_token(login.microsoft,onenote.app,scope=c(scopes,'offline_access'))
+    token <- httr::oauth2.0_token(login.microsoft,onenote.app,scope=c(scopes,'offline_access'),use_oob=TRUE,oob_value="https://login.microsoftonline.com/common/oauth2/nativeclient",query_authorize_extra=list(response_mode="query"))
   } else {
     token <- RequestToken$new(onenote.app,login.microsoft,params = list(use_oob = F, scope = scopes, type = NULL, redirect_uri="https://knoter-auth.s3.amazonaws.com/index.html",as_header=T) )
   }
