@@ -51,6 +51,16 @@ RequestToken <- R6::R6Class("RequestToken", inherit = httr::Token2.0, list(
   }
 ))
 
+AccessToken <- R6::R6Class("AccessToken", inherit= httr::Token2.0, list(
+  params = list(as_header = T),
+  initialize = function(token) {
+    self$credentials = list(access_token=token)
+  },
+  can_refresh = function() {
+    FALSE
+  }
+))
+
 DEFAULT_CLIENT_ID <- 'ea21f153-ff9a-45f9-9044-74c2e142a4af'
 
 # @importFrom httr oauth_endpoint
@@ -74,6 +84,14 @@ doSignin <- function(client_id,client_secret=NULL) {
       message("Using Client Secret stored in environment variable ", substr(client_secret,1,4),"...")
     } else {
       client_secret <- NULL
+    }
+  }
+
+  if (('vaultr' %in% rownames(installed.packages())) && (Sys.getenv('VAULT_TOKEN') != "") ) {
+    vault <- vaultr::vault_client(login="token")
+    wanted_token=vault$read('oauth2/azure_ad/creds/knoter')
+    if ( class(wanted_token) == 'list' ) {
+      return (AccessToken$new( wanted_token[[1]] ));
     }
   }
 
