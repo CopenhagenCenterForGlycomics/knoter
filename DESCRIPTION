@@ -20,6 +20,7 @@ Suggests:
     gridExtra,
     markdown,
     httr,
+    vaultr,
     testthat
 VignetteBuilder: knitr
 RoxygenNote: 6.1.0.9000
