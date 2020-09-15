@@ -85,6 +85,17 @@ style_source_tags <- function(root) {
     })
 }
 
+single_file_chunk_groups <- function(chunk_group,to_attach) {
+    is_file = sapply(chunk_group, function(chunk) {
+        html_block = XML::saveXML(chunk,doctype=NULL)
+        attachments = Filter(function(x) !is.null(x),Filter(function(file) {  grepl(file$part_id, html_block) },to_attach))
+        length(attachments) > 0
+    },simplify=F)
+    transitions = sapply( Map(c,seq(1, length(is_file)-1, by = 1), seq(2, length(is_file), by = 1)), function(vals) unlist(is_file[vals]),simplify=F )
+    splits = c(0,cumsum(sapply(transitions, function(vals) { (vals[1] != vals[2]) | all(vals) },simplify=F)))
+    split(chunk_group,splits)
+}
+
 read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
     root <- XML::htmlParse(html,asText=asText)
 
@@ -115,7 +126,7 @@ read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
     chunks = XML::getNodeSet(root,'//body/*')
     chunk_length = ifelse(batch.chunks > 0,batch.chunks,length(chunks))
     chunk_groups = suppressWarnings(Filter(function(x) { length(x) > 0 }, split(chunks,cut(1:length(chunks), max(floor(length(chunks) / chunk_length)+1,2),labels=F)) ))
-#XML::saveXML(root,doctype=NULL)
+    chunk_groups = do.call(c, lapply( chunk_groups, function(chunkset) { single_file_chunk_groups(chunkset,to_attach) } ) )
     if (! fragment.only) {
         element_to_save = paste(c('<?xml version="1.0" encoding="utf-8" ?>\n','<html>',head_text, '<body>', sapply(chunk_groups[[1]],function(chunk) { XML::saveXML(chunk,doctype=NULL) }) , '</body>','</html>'), sep='',collapse='')
         additional_elements = sapply( chunk_groups[2:length(chunk_groups)], function(chunkset) {  paste(c('<div>',sapply( chunkset, function(chunk) { XML::saveXML(chunk,doctype=NULL) } ),'</div>'),sep='',collapse='') } )
