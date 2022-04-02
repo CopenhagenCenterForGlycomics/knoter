@@ -38,10 +38,24 @@ excel <- function(...,name=NA) {
 #' @param dataframe Data frame to turn into a HTML table
 #' @seealso \code{\link{knit}}
 #' @export
-prettytable <- function(dataframe) {
+prettytable <- function(dataframe,environment=parent.frame()) {
   dataframe <- xtable::xtable(dataframe)
   varid <- substring(tempfile(pattern="xtable",tmpdir=''),2)
-  assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,parent.frame())
+  assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,environment)
+}
+
+#' Mark a dataframe to be turned into a HTML table or print using
+#' the default Rstudio method if running in an interactive environment
+#'
+#' @param dataframe Data frame to turn into a HTML table
+#' @export
+print_prettytable <- function(dataframe) {
+  if ( require('rstudioapi',quietly=T) ) {
+    if (!rstudioapi::isAvailable()) {
+      return( knoter::prettytable(val,environment=knitr::knit_global()) )
+    }
+  }
+  return(print(dataframe))
 }
 
 render = function (x, ...) {
