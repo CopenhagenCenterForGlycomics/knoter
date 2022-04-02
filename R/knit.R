@@ -52,7 +52,7 @@ prettytable <- function(dataframe,environment=parent.frame()) {
 print_prettytable <- function(dataframe) {
   if ( require('rstudioapi',quietly=T) ) {
     if (!rstudioapi::isAvailable()) {
-      return( knoter::prettytable(val,environment=knitr::knit_global()) )
+      return( knoter::prettytable(dataframe,environment=knitr::knit_global()) )
     }
   }
   return(print(dataframe))
