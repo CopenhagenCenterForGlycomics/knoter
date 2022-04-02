@@ -89,7 +89,7 @@ doSignin <- function(client_id,client_secret=NULL) {
 
   if (('vaultr' %in% rownames(installed.packages())) && (Sys.getenv('VAULT_TOKEN') != "") ) {
     vault <- vaultr::vault_client(login="token")
-    wanted_token=vault$read('oauth2/azure_ad/creds/knoter')
+    wanted_token=tryCatch(vault$read('oauth2/azure_ad/creds/knoter'),error=function (e) { errmessage = e[['message']]; stop(paste("Vault backend error",errmessage)); });
     if ( class(wanted_token) == 'list' ) {
       return (AccessToken$new( wanted_token[[1]] ));
     }
