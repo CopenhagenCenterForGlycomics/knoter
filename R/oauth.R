@@ -62,6 +62,15 @@ AccessToken <- R6::R6Class("AccessToken", inherit= httr::Token2.0, list(
 ))
 
 DEFAULT_CLIENT_ID <- 'ea21f153-ff9a-45f9-9044-74c2e142a4af'
+# Using the "CCG Knoter" registered app on Azure Portal
+
+# Expired token renew by:
+# vault_sudo write oauth2/azure_ad/creds/knoter state=foo scopes="Notes.Create,Notes.ReadWrite.All,Sites.Read.All,offline_access"
+#
+# Get the code from the browser and then put it in
+# vault_sudo write oauth2/azure_ad/creds/knoter code=$code
+
+
 
 # @importFrom httr oauth_endpoint
 # @importFrom httr oauth_app
