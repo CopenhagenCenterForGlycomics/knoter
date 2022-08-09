@@ -50,8 +50,17 @@ knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F,batch.chun
 		message('Waiting for Page to appear')
 		Sys.sleep(10)
 
+		pb = NULL
+
+		if (requireNamespace('progress',quietly=T)) {
+			pb = progress::progress_bar$new(total=length(attributes(files)$extrablocks))
+		}
+
 		for (extrablock in attributes(files)$extrablocks) {
 			patch_page_by_id(added$id,extrablock)
+			if ( ! is.null(pb) ) {
+				pb$tick()
+			}
 		}
 
 		use_default_endpoint()
@@ -83,8 +92,17 @@ knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F,batc
 		message('Waiting for Page to appear')
 		Sys.sleep(15)
 
+		pb = NULL
+
+		if (requireNamespace('progress',quietly=T)) {
+			pb = progress::progress_bar$new(total=length(attributes(files)$extrablocks))
+		}
+
 		for (extrablock in attributes(files)$extrablocks) {
 			patch_page_by_id(added$id,extrablock)
+			if ( ! is.null(pb) ) {
+				pb$tick()
+			}
 		}
 
 		use_default_endpoint()

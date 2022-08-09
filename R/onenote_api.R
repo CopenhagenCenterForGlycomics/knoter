@@ -188,23 +188,23 @@ handle_http_errors <- function(response) {
 do_api_call <- function(url,method='get',base=get('api_url_base',globals),...) {
 	access_info <- doSignin()
 	if (method == 'get') {
-		resp = httr::GET(paste(base,url,sep=''),...,httr::config(token=access_info))
+		resp = httr::RETRY('GET',paste(base,url,sep=''),...,config=httr::config(token=access_info))
 		handle_http_errors(resp)
 	}
 	if (method == 'post') {
-		resp = httr::POST(paste(base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		resp = httr::RETRY('POST',paste(base,url,sep=''),encode="multipart",config=httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'post_json') {
-		resp = httr::POST(paste(base,url,sep=''),encode="json",httr::config(token=access_info),...)
+		resp = httr::RETRY('POST',paste(base,url,sep=''),encode="json",config=httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'patch_json') {
-		resp = httr::PATCH(paste(base,url,sep=''),encode="json",httr::config(token=access_info),...)
+		resp = httr::RETRY('PATCH',paste(base,url,sep=''),encode="json",config=httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	if (method == 'patch') {
-		resp = httr::PATCH(paste(base,url,sep=''),encode="multipart",httr::config(token=access_info),...)
+		resp = httr::RETRY('PATCH',paste(base,url,sep=''),encode="multipart",config=httr::config(token=access_info),...)
 		handle_http_errors(resp)
 	}
 	return (httr::content(resp))

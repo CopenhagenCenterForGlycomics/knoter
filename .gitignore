@@ -6,3 +6,8 @@ pkg/
 .RData
 .httr-oauth
 inst/doc
+.cache
+figure/
+*.Rmd
+*.html
+*.patch
