@@ -197,7 +197,7 @@ knit_child <- function(input,...) {
   })
   rHtml = paste(lines,collapse="\n")
   rHtml = fix_escaping(rHtml)
-  knitr::knit_child(text=rHtml,quiet=T)
+  knitr::knit_child(text=rHtml,quiet=F)
 }
 
 knit.md <- function(input,text=NULL,...) {
@@ -359,7 +359,10 @@ knit <- function(...,append.meta.created=T) {
     }
   },child.md=function(before,options,envir) {
     if ( before ) {
+      knitr::opts_chunk$set(label.prefix=gsub('\\..*','',options$child.md))
+      knitr::opts_chunk$set(label.count=1)
       res = knit_child(options$child.md)
+      knitr::opts_chunk$set(label.prefix=NULL)
       return(res)
     }
   })
@@ -380,6 +383,15 @@ knit <- function(...,append.meta.created=T) {
   knitr::opts_hooks$set(child.md = function(options) {
     options$results = 'asis'
     options$echo = FALSE
+    options
+  })
+
+  knitr::opts_hooks$set(label.prefix = function(options) {
+    if (is.null(options$label) || any(stringr::str_detect(string=options$label,pattern='unnamed-chunk'))) {
+      options$label = paste(options$label.prefix,options$label.count,sep='_')
+      message('Renamed label: ',options$label)
+      knitr::opts_chunk$set(label.count=options$label.count+1)
+    }
     options
   })
 
