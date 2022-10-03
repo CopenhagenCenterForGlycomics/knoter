@@ -338,7 +338,7 @@ knit <- function(...,append.meta.created=T) {
     if ( ! before) {
       tables = get_objects_with_class('xtable',envir)
       if (length(tables) > 0) {
-        table_data <- (sapply(tables,function(tab) { print(tab,type='html') },simplify=T,USE.NAMES=F))
+        table_data <- (sapply(tables,function(tab) { print(tab,type='html',print.results=F) },simplify=T,USE.NAMES=F))
         return (table_data)
       }
     }
