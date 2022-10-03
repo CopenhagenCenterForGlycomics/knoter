@@ -177,6 +177,29 @@ fix_escaping <- function(html) {
 
 }
 
+#' @export
+knit_child <- function(input,...) {
+  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c('fenced_code'),fragment.only=T)
+  rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
+  rHtml = gsub( "</code></pre>", "end.rcode-->\n",  gsub("<pre><code class=\"r([^\"]*)\">","\n<!--begin.rcode \\1\n",rHtml))
+  in_rcode = FALSE
+  lines = sapply(unlist(strsplit(rHtml,'\n')),function(line) {
+    if (grepl("begin.rcode",line)) {
+      in_rcode <<- TRUE
+    }
+    if (grepl("end.rcode",line)) {
+      if ( ! in_rcode ) {
+        return ("</code></pre>")
+      }
+      in_rcode <<- FALSE
+    }
+    line
+  })
+  rHtml = paste(lines,collapse="\n")
+  rHtml = fix_escaping(rHtml)
+  knitr::knit_child(text=rHtml,quiet=T)
+}
+
 knit.md <- function(input,text=NULL,...) {
   results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c('fenced_code'))
   rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
@@ -334,6 +357,11 @@ knit <- function(...,append.meta.created=T) {
         }),collapse=''))
       }
     }
+  },child.md=function(before,options,envir) {
+    if ( before ) {
+      res = knit_child(options$child.md)
+      return(res)
+    }
   })
   knitr::render_html()
 
@@ -348,6 +376,13 @@ knit <- function(...,append.meta.created=T) {
   knitr::opts_chunk$set(make.multipage=T)
   old_chunk <- knitr::knit_hooks$get('chunk')
   old_source <- knitr::knit_hooks$get('source')
+
+  knitr::opts_hooks$set(child.md = function(options) {
+    options$results = 'asis'
+    options$echo = FALSE
+    options
+  })
+
   knitr::knit_hooks$set(plot=function(x,options) {
     x = knitr::hook_plot_html(x,options)
     paste(x, '</div><div>',
