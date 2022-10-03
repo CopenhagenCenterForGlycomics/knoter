@@ -91,6 +91,9 @@ single_file_chunk_groups <- function(chunk_group,to_attach) {
         attachments = Filter(function(x) !is.null(x),Filter(function(file) {  grepl(file$part_id, html_block) },to_attach))
         length(attachments) > 0
     },simplify=F)
+    if (length(is_file) < 2) {
+        return(list(chunk_group))
+    }
     transitions = sapply( Map(c,seq(1, length(is_file)-1, by = 1), seq(2, length(is_file), by = 1)), function(vals) unlist(is_file[vals]),simplify=F )
     splits = c(0,cumsum(sapply(transitions, function(vals) { (vals[1] != vals[2]) | all(vals) },simplify=F)))
     split(chunk_group,splits)

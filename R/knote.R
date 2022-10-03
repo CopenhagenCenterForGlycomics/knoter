@@ -34,13 +34,16 @@
 #' knoter::knote(text=rmd_text,notebook='My Notebook', section='My section')
 #' }
 #' @export
-knote <- function(...,notebook,section,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
+knote <- function(...,notebook=NULL,section=NULL,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
 	arguments = list(...)
 	file_output = arguments[['output']]
 
 	knitted = knoter::knit(...)
 	files = read_html(knitted,asText=is.null(file_output),fragment.only=F,batch.chunks=batch.chunks)
 
+	if ( is.null(notebook) ) {
+		return (NULL)
+	}
 	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
 	if ('extrablocks' %in% names(attributes(files))) {
 		if ( ! is.null(sharepoint) ) {
