@@ -145,6 +145,10 @@ read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
         to_attach = Filter(function(x) !is.null(x),Filter(function(file) {  grepl(file$part_id, html_block) },to_attach))
         for (attachment in to_attach) {
             mime = mime::guess_type(URLdecode(attachment$filename))
+            if ( ! file.exists(URLdecode(attachment$filename))) {
+                message(paste(URLdecode(attachment$filename),'is missing, skipping',sep=' '))
+                next
+            }
             if (file.info(URLdecode(attachment$filename))$size <= 2*1024*1024) {
                 files[[attachment$part_id]] <- httr::upload_file(URLdecode(attachment$filename),mime)
             } else {
