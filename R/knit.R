@@ -128,7 +128,7 @@ write_excel_workbooks <- function(books,options) {
 
 write_workbook <- function(data,filename) {
   if (!file.exists(dirname(filename))) {
-    dir.create(dirname(filename))
+    dir.create(dirname(filename),recursive=T)
   } else if (file.exists(filename)) {
     file.remove(filename)
   }
