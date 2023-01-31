@@ -91,8 +91,10 @@ extract_source_excel_block <- function(tags) {
   root <- XML::htmlParse(paste(tags,collapse=''),asText=T)
   source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")
   results <- list()
-  if (!is.null(source_node)) {
+  if (!is.null(source_node) && length(source_node) > 0) {
     results$source_node <- XML::saveXML(source_node[[1]])
+  } else {
+    results$source_node = ''
   }
   results$excel_node <- sapply(XML::getNodeSet(root,'//excel/text()'),function(node) { XML::saveXML(node) })
   XML::free(root)
