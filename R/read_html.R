@@ -29,12 +29,22 @@ inline_css <- function(root) {
     if (is.null(style_nodes) || length(style_nodes) < 1 ) {
         return()
     }
-    css_defs = unlist( sapply( style_nodes, function(style) {
-        css_lines=strsplit( XML::getChildrenStrings(style),'\n',fixed=T)[[1]]
-        if (any(grepl("[A-Za-z]",css_lines))) {
-          return (knitr:::css.parser(lines=css_lines))
-        }
-    },simplify=F),recursive=F)
+
+    if (require('cssparser',quietly = T)) {
+        style_declarations = unlist( sapply( style_nodes, function(style) {
+            child_strings = XML::getChildrenStrings(style)
+        },simplify=F),recursive=F)
+        css_defs = cssparser::read_css(paste(style_declarations,collapse='\n'))
+    } else {
+        css_defs = unlist( sapply( style_nodes, function(style) {
+            child_strings = XML::getChildrenStrings(style)
+            css_lines=strsplit(child_strings ,'\n',fixed=T)[[1]]
+            if (any(grepl("[A-Za-z]",css_lines))) {
+                return (knitr:::css.parser(lines=css_lines))
+            }
+        },simplify=F),recursive=F)
+    }
+
     if (is.null(css_defs)) {
         return()
     }
@@ -42,13 +52,17 @@ inline_css <- function(root) {
     names(css_defs) <- gsub(' +',' ', gsub('.',' ',names(css_defs),fixed=T))
     spans = XML::getNodeSet(root,'//span[@class]')
     sapply(spans, function(span_node) {
-        css_def = css_def_to_inline( css_defs[[ XML::xmlAttrs(span_node,'class') ]] )
-        XML::xmlAttrs(span_node) <- c(style=css_def,class=NULL)
+        css_block = c( css_defs[[ XML::xmlAttrs(span_node,'class') ]], css_defs[[ paste('code span ',XML::xmlAttrs(span_node,'class'),sep='') ]]) 
+        css_block = css_block[!is.null(css_block)]
+        if ( ! is.null(css_block) ) {
+          css_def = css_def_to_inline(css_block)
+          XML::xmlAttrs(span_node) <- c(style=css_def,class=NULL)
+        }
     })
 }
 
 style_pre_tags <- function(root) {
-    pres = XML::getNodeSet(root,'//pre[@class="knitr r"]')
+    pres = c( XML::getNodeSet(root,'//pre[@class="knitr r"]'), XML::getNodeSet(root,'//pre')) 
     sapply(pres,function(pre_node) {
         XML::xmlAttrs(pre_node) <- c(style="font-family: Courier; font-size: 4px;")
         XML::xmlName(pre_node) <- 'div'
@@ -56,7 +70,7 @@ style_pre_tags <- function(root) {
 }
 
 style_output_tags <- function(root) {
-    divs = XML::getNodeSet(root,'//div[@class="source"]')
+    divs = c( XML::getNodeSet(root,'//div[@class="source"]'), XML::getNodeSet(root,'//div[@class="sourceCode"]')) 
     sapply(divs,function(div_node) {
         table_el <- XML::newXMLNode("table")
         row_el <- XML::newXMLNode('tr')
@@ -71,7 +85,7 @@ style_output_tags <- function(root) {
 }
 
 style_source_tags <- function(root) {
-    divs = XML::getNodeSet(root,'//div[@class="source"]')
+    divs = c( XML::getNodeSet(root,'//div[@class="source"]'), XML::getNodeSet(root,'//div[@class="sourceCode"]'))
     sapply(divs,function(div_node) {
         table_el <- XML::newXMLNode("table")
         row_el <- XML::newXMLNode('tr')
@@ -83,6 +97,14 @@ style_source_tags <- function(root) {
         XML::addChildren(td_el,div_node)
         XML::xmlAttrs(div_node) <- c(style="background-color: #f5f5f5;")
     })
+}
+
+remove_pandoc_anchor_tags <- function(root) {
+    anchors = c( XML::getNodeSet(root,'//a[starts-with(@href, "#cb")]'))
+    sapply(anchors,function(anchor_node) {
+        span <- XML::newXMLNode("span")
+        XML::replaceNodes(anchor_node,span)
+    })    
 }
 
 single_file_chunk_groups <- function(chunk_group,to_attach) {
@@ -105,6 +127,7 @@ read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
     inline_css(root)
     style_pre_tags(root)
     style_source_tags(root)
+    remove_pandoc_anchor_tags(root)
 
     head_text = XML::saveXML(XML::getNodeSet(root,'//head')[[1]],doctype=NULL)
 
