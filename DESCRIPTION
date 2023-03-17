@@ -12,6 +12,7 @@ License: LGPL
 Imports:
     xtable,
     XML,
+    purrr,
     knitr (>= 1.21)
 Suggests:
     writexl,

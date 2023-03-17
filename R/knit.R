@@ -249,6 +249,202 @@ file_is_markdown <- function(input,text=NULL) {
   return(FALSE)
 }
 
+set_knit_opts_common = function() {
+
+  knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='knoter_data/')
+  
+  if (requireNamespace('writexl',quietly=T)) {
+    knitr::opts_chunk$set(check.excel=T)
+    knitr::opts_knit$set(eval.after = 'check.excel')
+  } else {
+    message("Library 'writexl' is not installed, not writing Excel files")
+  }
+
+  knitr::opts_chunk$set(make.tables=T)
+  knitr::opts_chunk$set(make.multipage=T)
+  knitr::opts_chunk$set(chunk.post=T)
+
+}
+
+set_knit_opts_html = set_knit_opts_common
+set_knit_opts_rmarkdown = set_knit_opts_common
+
+set_knit_opts_hooks_common = function() {
+  knitr::opts_hooks$set(
+    child.md = function(options) {
+      options$results = 'asis'
+      options$echo = FALSE
+      options
+    },
+    label.prefix = function(options) {
+      if (is.null(options$label) || any(stringr::str_detect(string=options$label,pattern='unnamed-chunk'))) {
+        options$label = paste(options$label.prefix,options$label.count,sep='_')
+        message('Renamed label: ',options$label)
+        knitr::opts_chunk$set(label.count=options$label.count+1)
+      }
+      options
+    }
+  )
+}
+
+set_knit_opts_hooks_html = set_knit_opts_hooks_common
+set_knit_opts_hooks_rmarkdown = set_knit_opts_hooks_common
+
+set_knit_hooks_common = function() {
+  knitr::knit_hooks$set(
+    check.excel=function(before,options,envir) {
+      if (! before) {
+        workbooks = get_objects_with_class('excel.workbook',envir)
+        if (length(workbooks) > 0) {
+          filenames=write_excel_workbooks(workbooks,options)
+          return(paste(sapply(filenames,function(filename) { paste('<excel>',filename,'</excel>',sep='') }),collapse=''))
+        }
+      }
+    },make.tables=function(before,options,envir) {
+      if ( ! before) {
+        tables = get_objects_with_class('xtable',envir)
+        if (length(tables) > 0) {
+          table_data <- (sapply(tables,function(tab) { print(tab,type='html',print.results=F) },simplify=T,USE.NAMES=F))
+          return (table_data)
+        }
+      }
+    },make.multipage=function(before,options,envir) {
+      if ( ! before) {
+        plots = get_objects_with_class('multipage',envir)
+        if (length(plots) > 0) {
+          filenames=write_multipage_plots(plots,options)
+          return(paste(sapply(filenames,function(filename) {
+            paste('<object type="application/pdf" data="file://',
+               filename,
+               '" data-attachment="',
+               options$label,
+               '.pdf"></object></div><div class="rcode">\n'
+            ,sep='')
+          }),collapse=''))
+        }
+      }
+    }
+  )  
+}
+
+set_knit_hooks_rmarkdown = function() {
+  set_knit_hooks_common()
+  
+  knitr::knit_hooks$set(
+    document=function(x) {
+      x
+    }
+  )
+}
+
+post_html_fixes = function(text) {
+
+  text = gsub('&nbsp;','nbsp',paste(text,collapse=''))
+  text = gsub('NEWLINE','\n',paste(text,collapse=''))
+
+  root <- XML::htmlParse(text,asText=T,replaceEntities=T)
+  nodeset <- XML::getNodeSet(root, "/html/head/meta[@name='created']")
+  if (! is.null(nodeset)) {
+    XML::removeNodes(nodeset)
+  }
+  head_elements = XML::getNodeSet(root, "/html/head")
+  if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
+    XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
+  }
+
+  
+  # Fix the line breaks in code blocks
+
+  pre_element_text = c( XML::getNodeSet(root,"//pre/text()"), XML::getNodeSet(root,"//code/text()") ) 
+  for ( pre_text in pre_element_text ) {
+    old_text = XML::xmlValue(pre_text)
+    XML::xmlValue(pre_text) = gsub('\n','#br#\n',old_text)
+  }
+
+  text = XML::saveXML(root)
+  text = gsub('nbsp','&nbsp;',text)
+  text = gsub('#br#\n*</pre>','</pre>',text)
+  text = gsub('#br#\n*</code>','</code>',text)
+
+  text = gsub('#br#','<br/>',text)
+
+  XML::free(root)
+
+  text
+}
+
+set_knit_hooks_html = function() {
+  set_knit_hooks_common()
+
+  old_chunk <- knitr::knit_hooks$get('chunk')
+  old_source <- knitr::knit_hooks$get('source')
+
+  knitr::knit_hooks$set(
+    document=function(x) {
+      if ( ! append.meta.created ) {
+        return (x);
+      }
+      return(post_html_fixes(x))
+    },
+    child.md=function(before,options,envir) {
+      if ( before ) {
+        default_label = knitr::opts_knit$get('unnamed.chunk.label')
+        current_counter = knitr:::chunk_counter() - 1
+        knitr:::chunk_counter(reset=T)
+        knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
+        res = knit_child(options$child.md)
+        knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
+        counter_inc = knitr:::chunk_counter(reset=T)
+        while (counter_inc < current_counter) {
+          counter_inc = knitr:::chunk_counter()
+        }
+        return(res)
+      }
+    },
+    plot=function(x,options) {
+      x = knitr::hook_plot_html(x,options)
+      paste(x, '</div><div>',
+               '<object type="application/pdf" data="file://',
+               knitr::fig_path('.pdf',options),
+               '" data-attachment="',
+               options$label,
+               '-',
+               options$fig.cur %n% 1L,
+               '.pdf"></object></div><div class="rcode">\n'
+            ,sep='')
+    },
+    chunk=function(x,options) {
+      if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
+        components<-extract_source_excel_block(c('<root>',x,'</root>'))
+        x<- c( components$source_node, sapply(components$excel_node, function(file) {
+          paste( '<object type="application/vnd.ms-excel" data="file://',
+                 file,
+                 '" data-attachment="',
+                 basename(file),
+                 '"></object>',sep='')
+        },USE.NAMES=F,simplify=F))
+        block <- paste(x,sep='',collapse='')
+        x <- block
+      }
+      x <- old_chunk(x,options)
+      # Remove trailing spaces
+      x = gsub(' +\n','\n',x)
+      # Remove trailing newlines
+      x = gsub("\n$","",x)
+      # Turn multiple newlines into br
+      x = gsub("\n+","<br/>",x,fixed=T)
+      # Turn double space into non-breaking space
+      x = gsub('  ', "&nbsp;&nbsp;",x)
+      return( paste(x,"\n",sep=''))
+    },source=function(x,options) {
+      x <- old_source(x,options)
+      x = gsub(' +\n','\n',x)
+      paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n+","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
+    }
+  )
+
+}
+
 #' Knit a Rhtml or Rmd file to a HTML document
 #'
 #' Wrapper function for knitr that will take 
@@ -301,146 +497,13 @@ knit <- function(...,append.meta.created=T) {
     args[[1]] <- NULL
   }
 
-  knitr::knit_hooks$set(document=function(x) {
-    if ( ! append.meta.created ) {
-      return (x);
-    }
-    text = gsub('&nbsp;','nbsp',paste(x,collapse=''))
-    root <- XML::htmlParse(text,asText=T,replaceEntities=T)
-    nodeset <- XML::getNodeSet(root, "/html/head/meta[@name='created']")
-    if (! is.null(nodeset)) {
-      XML::removeNodes(nodeset)
-    }
-    head_elements = XML::getNodeSet(root, "/html/head")
-    if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
-      XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
-    }
-    pre_element_text = XML::getNodeSet(root,"//pre/text()")
-    for ( pre_text in pre_element_text ) {
-      old_text = XML::xmlValue(pre_text)
-      XML::xmlValue(pre_text) = gsub('\n','#br#\n',old_text)
-    }
+  set_knit_hooks_html()
 
-    text = XML::saveXML(root)
-    text = gsub('nbsp','&nbsp;',text)
-    text = gsub('#br#\n*</pre>','</pre>',text)
-    text = gsub('#br#','<br/>',text)
-
-    XML::free(root)
-    text
-  },check.excel=function(before,options,envir) {
-    if (! before) {
-      workbooks = get_objects_with_class('excel.workbook',envir)
-      if (length(workbooks) > 0) {
-        filenames=write_excel_workbooks(workbooks,options)
-        return(paste(sapply(filenames,function(filename) { paste('<excel>',filename,'</excel>',sep='') }),collapse=''))
-      }
-    }
-  },make.tables=function(before,options,envir) {
-    if ( ! before) {
-      tables = get_objects_with_class('xtable',envir)
-      if (length(tables) > 0) {
-        table_data <- (sapply(tables,function(tab) { print(tab,type='html',print.results=F) },simplify=T,USE.NAMES=F))
-        return (table_data)
-      }
-    }
-  },make.multipage=function(before,options,envir) {
-    if ( ! before) {
-      plots = get_objects_with_class('multipage',envir)
-      if (length(plots) > 0) {
-        filenames=write_multipage_plots(plots,options)
-        return(paste(sapply(filenames,function(filename) {
-          paste('<object type="application/pdf" data="file://',
-             filename,
-             '" data-attachment="',
-             options$label,
-             '.pdf"></object></div><div class="rcode">\n'
-          ,sep='')
-        }),collapse=''))
-      }
-    }
-  },child.md=function(before,options,envir) {
-    if ( before ) {
-      default_label = knitr::opts_knit$get('unnamed.chunk.label')
-      current_counter = knitr:::chunk_counter() - 1
-      knitr:::chunk_counter(reset=T)
-      knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
-      res = knit_child(options$child.md)
-      knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
-      counter_inc = knitr:::chunk_counter(reset=T)
-      while (counter_inc < current_counter) {
-        counter_inc = knitr:::chunk_counter()
-      }
-      return(res)
-    }
-  })
   knitr::render_html()
 
-  knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='knoter_data/')
-  if (requireNamespace('writexl',quietly=T)) {
-    knitr::opts_chunk$set(check.excel=T)
-    knitr::opts_knit$set(eval.after = 'check.excel')
-  } else {
-    message("Library 'writexl' is not installed, not writing Excel files")
-  }
-  knitr::opts_chunk$set(make.tables=T)
-  knitr::opts_chunk$set(make.multipage=T)
-  old_chunk <- knitr::knit_hooks$get('chunk')
-  old_source <- knitr::knit_hooks$get('source')
+  set_knit_opts_html()
 
-  knitr::opts_hooks$set(child.md = function(options) {
-    options$results = 'asis'
-    options$echo = FALSE
-    options
-  })
+  set_knit_opts_hooks_html()
 
-  knitr::opts_hooks$set(label.prefix = function(options) {
-    if (is.null(options$label) || any(stringr::str_detect(string=options$label,pattern='unnamed-chunk'))) {
-      options$label = paste(options$label.prefix,options$label.count,sep='_')
-      message('Renamed label: ',options$label)
-      knitr::opts_chunk$set(label.count=options$label.count+1)
-    }
-    options
-  })
-
-  knitr::knit_hooks$set(plot=function(x,options) {
-    x = knitr::hook_plot_html(x,options)
-    paste(x, '</div><div>',
-             '<object type="application/pdf" data="file://',
-             knitr::fig_path('.pdf',options),
-             '" data-attachment="',
-             options$label,
-             '-',
-             options$fig.cur %n% 1L,
-             '.pdf"></object></div><div class="rcode">\n'
-          ,sep='')
-  },chunk=function(x,options) {
-    if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
-      components<-extract_source_excel_block(c('<root>',x,'</root>'))
-      x<- c( components$source_node, sapply(components$excel_node, function(file) {
-        paste( '<object type="application/vnd.ms-excel" data="file://',
-               file,
-               '" data-attachment="',
-               basename(file),
-               '"></object>',sep='')
-      },USE.NAMES=F,simplify=F))
-      block <- paste(x,sep='',collapse='')
-      x <- block
-    }
-    x <- old_chunk(x,options)
-    # Remove trailing spaces
-    x = gsub(' +\n','\n',x)
-    # Remove trailing newlines
-    x = gsub("\n$","",x)
-    # Turn multiple newlines into br
-    x = gsub("\n+","<br/>",x,fixed=T)
-    # Turn double space into non-breaking space
-    x = gsub('  ', "&nbsp;&nbsp;",x)
-    return( paste(x,"\n",sep=''))
-  },source=function(x,options) {
-    x <- old_source(x,options)
-    x = gsub(' +\n','\n',x)
-    paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n+","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
-  });
   return (do.call(knitr::knit,args))
 }
