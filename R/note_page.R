@@ -165,9 +165,18 @@ note_page_knitr_options <- function() {
 
   old_output <- knitr::knit_hooks$get('output')
   knit_hooks$output <- function(x,options) {
-    x = stringr::str_replace_all(x,'\n','NEWLINE\n')
+    x = stringr::str_replace_all(x,'\n','\nNEWLINE\n')
     old_output(x,options)
   }
+
+  old_source <- knitr::knit_hooks$get('source')
+  knit_hooks$source <- function(x,options) {
+    x = gsub('[\n\r]','\nNEWLINECODE\n',x)
+    x <- old_source(unlist(Map(function(x) c(x,'NEWLINECODE') ,as.list(x)))[1:(2*length(x)-1)],options)
+    x = gsub(' +\n','\n',x)
+    paste(gsub('  ', "&nbsp;&nbsp;", x),'\n',sep='')
+  }
+
 
 
   # return as knitr options
@@ -205,7 +214,7 @@ intermediates_generator <- function(original_input, intermediates_dir) {
 }
 
 post_processor <- function(metadata, input_file, output_file, clean, verbose, notebook=NULL,section=NULL,sharepoint=NULL,batch.chunks=10 ) {
-  browser()
+
   write_utf8(post_html_fixes(read_utf8(output_file)),file(output_file))
 
   files = read_html(output_file,asText=F,fragment.only=F,batch.chunks=batch.chunks)

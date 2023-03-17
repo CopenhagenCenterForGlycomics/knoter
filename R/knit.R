@@ -340,6 +340,7 @@ set_knit_hooks_rmarkdown = function() {
 post_html_fixes = function(text) {
 
   text = gsub('&nbsp;','nbsp',paste(text,collapse=''))
+  text = gsub('NEWLINECODE','<br/>',paste(text,collapse=''))
   text = gsub('NEWLINE','\n',paste(text,collapse=''))
 
   root <- XML::htmlParse(text,asText=T,replaceEntities=T)
