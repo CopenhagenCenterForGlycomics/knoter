@@ -1,4 +1,5 @@
-note_page <- function(notebook=NULL,section=NULL,sharepoint=NULL,batch.chunks=10) {
+#' @export
+note_page <- function(notebook=NULL,section=NULL,sharepoint=NULL,keep_md=FALSE,batch.chunks=10) {
 
   args <- c("--template", as_tmpfile(template),"--highlight-style","pygments")
 
@@ -7,7 +8,7 @@ note_page <- function(notebook=NULL,section=NULL,sharepoint=NULL,batch.chunks=10
     pandoc = rmarkdown::pandoc_options(
       to = "html", from = NULL, args = args
     ),
-    keep_md = FALSE,
+    keep_md = keep_md,
     clean_supporting = FALSE,
     pre_knit = pre_knit,
     post_knit = post_knit,
@@ -22,7 +23,7 @@ template = "
 <html>
   <head>
     <title>$title$</title>
-    <style>$highlighting-css$</style
+    <style>$highlighting-css$</style>
   </head>
   <body>
   $body$
@@ -125,19 +126,6 @@ note_page_knitr_options <- function() {
   # do not get indented
   old_chunk <- knitr::knit_hooks$get('chunk')
   knit_hooks$chunk <- function(x, options) {
-    if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
-      components<-extract_source_excel_block(c('<root>',x,'</root>'))
-      excel_elements<- c( components$source_node, sapply(components$excel_node, function(file) {
-        paste( '<object type="application/vnd.ms-excel" data="file://',
-               file,
-               '" data-attachment="',
-               basename(file),
-               '"></object>',sep='')
-      },USE.NAMES=F,simplify=F))
-      x = stringr::str_replace_all(x,'<excel>[^<]*</excel>','')
-      block <- paste(c(x,unlist(excel_elements)),sep='',collapse='')
-      x <- block
-    }
     x <- old_chunk(x,options)
     # Remove trailing spaces
     x = gsub(' +\n','\n',x)
@@ -177,12 +165,55 @@ note_page_knitr_options <- function() {
     paste(gsub('  ', "&nbsp;&nbsp;", x),'\n',sep='')
   }
 
-
+  opts_chunk <- list(
+    render = note_render_hook
+  )
 
   # return as knitr options
-  rmarkdown::knitr_options(knit_hooks = knit_hooks)
+  rmarkdown::knitr_options(knit_hooks = knit_hooks, opts_chunk = opts_chunk)
 }
 
+knit_print_excel <- function(dflist,options) {
+  bookids = 'Workbook1'
+  filename = file.path(options$data.path, paste( options$label,'-',bookids,'.xlsx',sep=''))
+  outfile = write_workbook(dflist,filename)
+  res = paste( '<object type="application/vnd.ms-excel" data="file://',
+         outfile,
+         '" data-attachment="',
+         basename(outfile),
+         '"></object>',sep='')
+  return (res)
+}
+
+knit_print.list <- function(x,excel=F,options) {
+  if (excel && all(sapply(x,is.data.frame,simplify=F))) {
+    res = knit_print_excel(x,options)
+    res = knitr::asis_output(res)
+  } else {
+    res = knitr::knit_print(x)
+  }
+  return (res)
+}
+
+knit_print.data.frame <- function(x,excel=F,options) {
+  if (excel) {
+    res = knit_print_excel(list(data=x),options)
+  } else {
+    res = paste(c('', '', knitr::kable(x)), collapse = '\n')
+  }
+  knitr::asis_output(res)
+}
+
+note_render_hook <- function(x,options,...) {
+
+  can_excel = requireNamespace('writexl',quietly=T)
+
+  if(!is.null(options[['excel']]) && can_excel) {
+    knitr::knit_print(x,excel=T,options=options)
+  } else {
+    knitr::knit_print(x)
+  }
+}
 
 
 pre_knit <- function(input, ...) {

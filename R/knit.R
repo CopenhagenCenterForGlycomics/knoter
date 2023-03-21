@@ -1,34 +1,6 @@
 
 `%n%` = function(x, y) if (is.null(x)) y else x
 
-#' Mark a set of dataframes to be turned into an Excel workbook
-#'
-#' To mark out a set of dataframes to be turned into a Excel workbook,
-#' call this function with the dataframes as arguments. Named arguments
-#' will result in the names used as the worksheet names.
-#'
-#' @param ... Data frames to place in workbook
-#' @param name Name to use to name the workbook file
-#' @examples
-#' excel(Cars_sheet=cars,CO2_sheet=CO2)
-#'
-#' # Use default sheet names
-#' excel(cars,CO2)
-#'
-#' # Write to a specific filename
-#' excel(cars,name="Cars")
-#' @seealso \code{\link{knit}}
-#' @export
-excel <- function(...,name=NA) {
-  obj <- list(...)
-  class(obj) <- "excel.workbook"
-  if ( ! is.na(name) ) {
-    attr(obj,'name') <- name
-  }
-  assign(variable_name_for_class('excel.workbook',parent.frame()),obj,parent.frame())
-  return ()
-}
-
 #' Mark a dataframe to be turned into a HTML table
 #'
 #' To mark out a dataframe as one that should be
@@ -87,20 +59,6 @@ multipage <- function(plots) {
   return (render(plots[[1]]))
 }
 
-extract_source_excel_block <- function(tags) {
-  root <- XML::htmlParse(paste(tags,collapse=''),asText=T)
-  source_node <- XML::getNodeSet(root, "/html/body/root/div[@class='source']")
-  results <- list()
-  if (!is.null(source_node) && length(source_node) > 0) {
-    results$source_node <- XML::saveXML(source_node[[1]])
-  } else {
-    results$source_node = ''
-  }
-  results$excel_node <- sapply(XML::getNodeSet(root,'//excel/text()'),function(node) { XML::saveXML(node) })
-  XML::free(root)
-  results
-}
-
 variable_name_for_class <- function(clazz,envir) {
   existing_objects <- sort( Filter(function(var) { clazz %in% class(envir[[var]]) },objects(envir)) )
   if (length(existing_objects) > 0) {
@@ -118,14 +76,6 @@ get_objects_with_class <- function(clazz,envir,remove=T) {
     rm(list=object.names,envir=envir)
   }
   objects
-}
-
-write_excel_workbooks <- function(books,options) {
-  bookids = as.vector(sapply(books, function(book) { attr(book,'name',exact=T) %n% 0L },simplify=T))
-  bookids[ bookids == 0 ] <- paste('Workbook' , 1:length(bookids[bookids == 0]),sep='')
-  filenames = file.path( options$data.path, paste( options$label,'-',bookids,'.xlsx',sep=''))
-  sapply(1:length(filenames), function(idx) { write_workbook(books[[idx]],filenames[idx]) })
-  return (filenames)
 }
 
 write_workbook <- function(data,filename) {
@@ -253,13 +203,6 @@ set_knit_opts_common = function() {
 
   knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='knoter_data/')
   
-  if (requireNamespace('writexl',quietly=T)) {
-    knitr::opts_chunk$set(check.excel=T)
-    knitr::opts_knit$set(eval.after = 'check.excel')
-  } else {
-    message("Library 'writexl' is not installed, not writing Excel files")
-  }
-
   knitr::opts_chunk$set(make.tables=T)
   knitr::opts_chunk$set(make.multipage=T)
   knitr::opts_chunk$set(chunk.post=T)
@@ -292,15 +235,7 @@ set_knit_opts_hooks_rmarkdown = set_knit_opts_hooks_common
 
 set_knit_hooks_common = function() {
   knitr::knit_hooks$set(
-    check.excel=function(before,options,envir) {
-      if (! before) {
-        workbooks = get_objects_with_class('excel.workbook',envir)
-        if (length(workbooks) > 0) {
-          filenames=write_excel_workbooks(workbooks,options)
-          return(paste(sapply(filenames,function(filename) { paste('<excel>',filename,'</excel>',sep='') }),collapse=''))
-        }
-      }
-    },make.tables=function(before,options,envir) {
+    make.tables=function(before,options,envir) {
       if ( ! before) {
         tables = get_objects_with_class('xtable',envir)
         if (length(tables) > 0) {
@@ -333,6 +268,21 @@ set_knit_hooks_rmarkdown = function() {
   knitr::knit_hooks$set(
     document=function(x) {
       x
+    },
+    child.md = function(before,options,envir) {
+      if ( before ) {
+        default_label = knitr::opts_knit$get('unnamed.chunk.label')
+        current_counter = knitr:::chunk_counter() - 1
+        knitr:::chunk_counter(reset=T)
+        knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
+        res = knitr::knit_child(options$child.md)
+        knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
+        counter_inc = knitr:::chunk_counter(reset=T)
+        while (counter_inc < current_counter) {
+          counter_inc = knitr:::chunk_counter()
+        }
+        return(res)
+      }
     }
   )
 }
