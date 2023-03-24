@@ -269,6 +269,10 @@ set_knit_hooks_common = function() {
           }),collapse=''))
         }
       }
+    },excel=function(before,options,envir) {
+      if ( before ) {
+        workbook_counter(reset=T)
+      }
     }
   )  
 }
@@ -334,6 +338,17 @@ post_html_fixes = function(text) {
 
   text
 }
+
+object_counter = function(init = 0L) {
+  n = init
+  function(reset = FALSE) {
+    if (reset) return(n <<- init)
+    n <<- n + 1L
+    n - 1L
+  }
+}
+
+workbook_counter = object_counter(1L)
 
 set_knit_hooks_html = function() {
   set_knit_hooks_common()

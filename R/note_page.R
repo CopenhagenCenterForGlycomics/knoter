@@ -188,14 +188,15 @@ knit_print.excel.workbook <- function(x,options) {
   if (! is.null(attributes(x)$filename)) {
     res = knit_print_excel(x,options,filename=attributes(x)$filename)
   } else {
-    res = knit_print_excel(x,options)      
+    res = knit_print_excel(x,options,filename=paste('Workbook',workbook_counter(),'.xlsx',sep='')
   }
   knitr::asis_output(res)
 }
 
 knit_print.data.frame <- function(x,options) {
   if (!is.null(options[['excel']])) {
-    res = knit_print_excel(list(data=x),options)
+    workbook=excel.workbook(data=x,name=paste('Workbook',workbook_counter(),'.xlsx',sep=''))
+    res = knit_print_excel(workbook,options,filename=attributes(workbook)$filename)
   } else {
     res = paste(c('', '', knitr::kable(x)), collapse = '\n')
   }
