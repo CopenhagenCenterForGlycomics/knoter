@@ -173,10 +173,9 @@ note_page_knitr_options <- function() {
   rmarkdown::knitr_options(knit_hooks = knit_hooks, opts_chunk = opts_chunk)
 }
 
-knit_print_excel <- function(dflist,options) {
-  bookids = 'Workbook1'
-  filename = file.path(options$data.path, paste( options$label,'-',bookids,'.xlsx',sep=''))
-  outfile = write_workbook(dflist,filename)
+knit_print_excel <- function(dflist,options,filename='Woorkbook1.xlsx') {
+  autofilename = file.path(options$data.path, paste( options$label,'-',filename,sep=''))
+  outfile = write_workbook(dflist,autofilename)
   res = paste( '<object type="application/vnd.ms-excel" data="file://',
          outfile,
          '" data-attachment="',
@@ -185,18 +184,17 @@ knit_print_excel <- function(dflist,options) {
   return (res)
 }
 
-knit_print.list <- function(x,excel=F,options) {
-  if (excel && all(sapply(x,is.data.frame,simplify=F))) {
-    res = knit_print_excel(x,options)
-    res = knitr::asis_output(res)
+knit_print.excel.workbook <- function(x,options) {
+  if (! is.null(attributes(x)$filename)) {
+    res = knit_print_excel(x,options,filename=attributes(x)$filename)
   } else {
-    res = knitr::knit_print(x)
+    res = knit_print_excel(x,options)      
   }
-  return (res)
+  knitr::asis_output(res)
 }
 
-knit_print.data.frame <- function(x,excel=F,options) {
-  if (excel) {
+knit_print.data.frame <- function(x,options) {
+  if (!is.null(options[['excel']])) {
     res = knit_print_excel(list(data=x),options)
   } else {
     res = paste(c('', '', knitr::kable(x)), collapse = '\n')
@@ -208,11 +206,12 @@ note_render_hook <- function(x,options,...) {
 
   can_excel = requireNamespace('writexl',quietly=T)
 
-  if(!is.null(options[['excel']]) && can_excel) {
-    knitr::knit_print(x,excel=T,options=options)
-  } else {
-    knitr::knit_print(x)
+  if (! can_excel ) {
+    options[['excel']] = NULL
   }
+
+  knitr::knit_print(x,options)
+
 }
 
 

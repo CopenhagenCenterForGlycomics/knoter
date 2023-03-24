@@ -16,6 +16,17 @@ prettytable <- function(dataframe,environment=parent.frame()) {
   assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,environment)
 }
 
+#' @export
+excel.workbook <- function(...,name=NULL) {
+  result <- list(...)
+  class(result) <- 'excel.workbook'
+  attributes(result)$filename = name
+  result
+}
+
+#' @export
+excel <- excel.workbook
+
 #' Mark a dataframe to be turned into a HTML table or print using
 #' the default Rstudio method if running in an interactive environment
 #'
@@ -365,18 +376,6 @@ set_knit_hooks_html = function() {
             ,sep='')
     },
     chunk=function(x,options) {
-      if (grepl("<excel>",paste(x,collapse=''),fixed=T))  {
-        components<-extract_source_excel_block(c('<root>',x,'</root>'))
-        x<- c( components$source_node, sapply(components$excel_node, function(file) {
-          paste( '<object type="application/vnd.ms-excel" data="file://',
-                 file,
-                 '" data-attachment="',
-                 basename(file),
-                 '"></object>',sep='')
-        },USE.NAMES=F,simplify=F))
-        block <- paste(x,sep='',collapse='')
-        x <- block
-      }
       x <- old_chunk(x,options)
       # Remove trailing spaces
       x = gsub(' +\n','\n',x)
