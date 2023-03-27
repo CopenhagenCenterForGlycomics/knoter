@@ -26,4 +26,5 @@ register_s3_method <- function(pkg, generic, class, fun = NULL) {
 .onLoad <- function(...) {
   register_s3_method("knitr", "knit_print", "data.frame")
   register_s3_method("knitr", "knit_print", "excel.workbook")
+  register_s3_method("knitr", "knit_print", "multipage")
 }

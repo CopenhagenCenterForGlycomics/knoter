@@ -11,9 +11,7 @@
 #' @seealso \code{\link{knit}}
 #' @export
 prettytable <- function(dataframe,environment=parent.frame()) {
-  dataframe <- xtable::xtable(dataframe)
-  varid <- substring(tempfile(pattern="xtable",tmpdir=''),2)
-  assign( variable_name_for_class('xtable',parent.frame()) ,dataframe,environment)
+  dataframe
 }
 
 #' @export
@@ -33,12 +31,7 @@ excel <- excel.workbook
 #' @param dataframe Data frame to turn into a HTML table
 #' @export
 print_prettytable <- function(dataframe) {
-  if ( require('rstudioapi',quietly=T) ) {
-    if (!rstudioapi::isAvailable()) {
-      return( knoter::prettytable(dataframe,environment=knitr::knit_global()) )
-    }
-  }
-  return(print(dataframe))
+  dataframe
 }
 
 render = function (x, ...) {
@@ -65,9 +58,9 @@ multipage <- function(plots) {
   }
   plotlist = do.call(gridExtra::marrangeGrob,c(list(plots),ncol=1,nrow=1,list(top=NULL)))
   class(plotlist) <- "multipage"
-  varid <- substring(tempfile(pattern="multipage",tmpdir=''),2)
-  assign( variable_name_for_class("multipage",parent.frame()) ,plotlist,parent.frame())
-  return (render(plots[[1]]))
+  attributes(plotlist)$thumbnail = do.call(gridExtra::marrangeGrob,c(list(plots),nrow=1,ncol=length(plots),list(top=NULL)))
+  attributes(plotlist)$count = length(plots)
+  return(plotlist)
 }
 
 variable_name_for_class <- function(clazz,envir) {
@@ -99,15 +92,20 @@ write_workbook <- function(data,filename) {
   writexl::write_xlsx(x=datalist,path=filename,col_names=T,format_headers = T)
 }
 
-write_multipage_plots <- function(plotlists,options) {
-  sapply(1:length(plotlists),function(idx) {
-    filename = knitr::fig_path(paste('',idx,'multi.pdf',sep='.'),options,number=NULL)
-    plotlist = plotlists[[idx]]
-    pdf(file=filename,width=options$fig.width %n% 5L,height=options$fig.height %n% 5L)
-    lapply(plotlist, function(plot) { grid::grid.newpage(); grid::grid.draw(plot); })
+write_multipage_plot <- function(plotlist,thumbnail=NULL,pages=1,options=list()) {
+  multipage_image_id = multipage_counter()
+  filename = knitr::fig_path(paste('',multipage_image_id,'multi.pdf',sep='.'),options,number=NULL)
+  filename_thumbnail = knitr::fig_path(paste('',multipage_image_id,'multi.png',sep='.'),options,number=NULL)
+  pdf(file=filename,width=options$fig.width %n% 5L,height=options$fig.height %n% 5L)
+  lapply(plotlist, function(plot) { grid::grid.newpage(); grid::grid.draw(plot); })
+  dev.off()
+  if (!is.null(thumbnail)) {
+    png(file=filename_thumbnail,width= (pages * options$fig.width) %n% 5L,height=options$fig.height %n% 5L,units="in",res=72)
+    grid::grid.draw(thumbnail);
     dev.off()
-    filename
-  })
+    return (list(multi=filename,thumbnail=filename_thumbnail))
+  }
+  return (list(multi=filename))
 }
 
 fix_escaping <- function(html) {
@@ -214,9 +212,7 @@ set_knit_opts_common = function() {
 
   knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='knoter_data/')
   
-  knitr::opts_chunk$set(make.tables=T)
-  knitr::opts_chunk$set(make.multipage=T)
-  knitr::opts_chunk$set(chunk.post=T)
+  knitr::opts_chunk$set(reset.counters=T)
 
 }
 
@@ -246,32 +242,10 @@ set_knit_opts_hooks_rmarkdown = set_knit_opts_hooks_common
 
 set_knit_hooks_common = function() {
   knitr::knit_hooks$set(
-    make.tables=function(before,options,envir) {
-      if ( ! before) {
-        tables = get_objects_with_class('xtable',envir)
-        if (length(tables) > 0) {
-          table_data <- (sapply(tables,function(tab) { print(tab,type='html',print.results=F) },simplify=T,USE.NAMES=F))
-          return (table_data)
-        }
-      }
-    },make.multipage=function(before,options,envir) {
-      if ( ! before) {
-        plots = get_objects_with_class('multipage',envir)
-        if (length(plots) > 0) {
-          filenames=write_multipage_plots(plots,options)
-          return(paste(sapply(filenames,function(filename) {
-            paste('<object type="application/pdf" data="file://',
-               filename,
-               '" data-attachment="',
-               options$label,
-               '.pdf"></object></div><div class="rcode">\n'
-            ,sep='')
-          }),collapse=''))
-        }
-      }
-    },excel=function(before,options,envir) {
+    reset.counters=function(before,options,envir) {
       if ( before ) {
         workbook_counter(reset=T)
+        multipage_counter(reset=T)
       }
     }
   )  
@@ -349,6 +323,7 @@ object_counter = function(init = 0L) {
 }
 
 workbook_counter = object_counter(1L)
+multipage_counter = object_counter(1L)
 
 set_knit_hooks_html = function() {
   set_knit_hooks_common()

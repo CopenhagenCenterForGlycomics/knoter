@@ -141,6 +141,9 @@ note_page_knitr_options <- function() {
   old_plot <- knitr::knit_hooks$get('plot')
   knit_hooks$plot <- function(x,options) {
       x = old_plot(x,options)
+      if (!is.null(options[['skip_pdf']])) {
+        return(paste(x,sep=''))
+      }
       paste(x, '<object type="application/pdf" data="file://',
                knitr::fig_path('.pdf',options),
                '" data-attachment="',
@@ -188,9 +191,25 @@ knit_print.excel.workbook <- function(x,options) {
   if (! is.null(attributes(x)$filename)) {
     res = knit_print_excel(x,options,filename=attributes(x)$filename)
   } else {
-    res = knit_print_excel(x,options,filename=paste('Workbook',workbook_counter(),'.xlsx',sep='')
+    res = knit_print_excel(x,options,filename=paste('Workbook',workbook_counter(),'.xlsx',sep=''))
   }
   knitr::asis_output(res)
+}
+
+xtable_print = function(dataframe) {
+  print(xtable::xtable(dataframe),type='html',print.results=F)
+}
+
+knit_print.multipage <- function(x,options) {
+  paths = write_multipage_plot(x,thumbnail=attributes(x)$thumbnail,pages=attributes(x)$count,options=options)
+  html_fragment = paste('<object type="application/pdf" data="file://',
+     paths$multi,
+     '" data-attachment="',
+     options$label,
+     '.pdf"></object>\n'
+  ,sep='')
+  options$skip_pdf = TRUE
+  knitr::asis_output(c( knitr::knit_hooks$get('plot')(paths$thumbnail,options), html_fragment ))
 }
 
 knit_print.data.frame <- function(x,options) {
@@ -198,7 +217,7 @@ knit_print.data.frame <- function(x,options) {
     workbook=excel.workbook(data=x,name=paste('Workbook',workbook_counter(),'.xlsx',sep=''))
     res = knit_print_excel(workbook,options,filename=attributes(workbook)$filename)
   } else {
-    res = paste(c('', '', knitr::kable(x)), collapse = '\n')
+    res = paste(c('', '', xtable_print(x)), collapse = '\n')
   }
   knitr::asis_output(res)
 }
