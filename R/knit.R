@@ -63,25 +63,6 @@ multipage <- function(plots) {
   return(plotlist)
 }
 
-variable_name_for_class <- function(clazz,envir) {
-  existing_objects <- sort( Filter(function(var) { clazz %in% class(envir[[var]]) },objects(envir)) )
-  if (length(existing_objects) > 0) {
-    varid <- paste(existing_objects[[1]],length(existing_objects)+1,sep='_')
-  } else {
-    varid <- substring(tempfile(pattern=clazz,tmpdir=''),2)
-  }
-  varid
-}
-
-get_objects_with_class <- function(clazz,envir,remove=T) {
-  object.names=sort( Filter(function(var) { clazz %in% class(envir[[var]])},objects(envir)) )
-  objects=sapply(object.names,function(obj) { get(obj,envir) },simplify=F)
-  if (remove) {
-    rm(list=object.names,envir=envir)
-  }
-  objects
-}
-
 write_workbook <- function(data,filename) {
   if (!file.exists(dirname(filename))) {
     dir.create(dirname(filename),recursive=T)
@@ -138,76 +119,6 @@ fix_escaping <- function(html) {
 
 }
 
-#' @export
-knit_child <- function(input,...) {
-  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c('fenced_code'),fragment.only=T)
-  rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
-  rHtml = gsub( "</code></pre>", "end.rcode-->\n",  gsub("<pre><code class=\"r([^\"]*)\">","\n<!--begin.rcode \\1\n",rHtml))
-  in_rcode = FALSE
-  lines = sapply(unlist(strsplit(rHtml,'\n')),function(line) {
-    if (grepl("begin.rcode",line)) {
-      in_rcode <<- TRUE
-    }
-    if (grepl("end.rcode",line)) {
-      if ( ! in_rcode ) {
-        return ("</code></pre>")
-      }
-      in_rcode <<- FALSE
-    }
-    line
-  })
-  rHtml = paste(lines,collapse="\n")
-  rHtml = fix_escaping(rHtml)
-  knitr::knit_child(text=rHtml,quiet=F)
-}
-
-knit.md <- function(input,text=NULL,...) {
-  results = markdown::markdownToHTML(input,text=text,output=NULL,options=c('skip_style'),stylesheet='',extensions=c('fenced_code'))
-  rHtml = gsub("<code>r ([^\\>]*)</code>","<!--rinline \\1 -->",results)
-  rHtml = gsub( "</code></pre>", "end.rcode-->\n",  gsub("<pre><code class=\"r([^\"]*)\">","\n<!--begin.rcode \\1\n",rHtml))
-  in_rcode = FALSE
-  lines = sapply(unlist(strsplit(rHtml,'\n')),function(line) {
-    if (grepl("begin.rcode",line)) {
-      in_rcode <<- TRUE
-    }
-    if (grepl("end.rcode",line)) {
-      if ( ! in_rcode ) {
-        return ("</code></pre>")
-      }
-      in_rcode <<- FALSE
-    }
-    line
-  })
-  rHtml = paste(lines,collapse="\n")
-  rHtml = fix_escaping(rHtml)
-  args = list(...)
-  args['text'] <- rHtml
-  do.call( knoter::knit, args )
-}
-
-file_is_markdown <- function(input,text=NULL) {
-  if (is.character(input) && tools::file_ext( input ) %in% c('Rmd','md')) {
-    return(TRUE)
-  }
-  if (is.null(text)) {
-    return(FALSE)
-  }
-  text = unlist(strsplit(text,"\n"))
-
-  pat = knitr::all_patterns[['md']][['chunk.begin']]
-
-  if (is.character(text) && length(grep(pat, text))) {
-    return(TRUE)
-  }
-
-  pat = '`r[ #]([^`]+)\\s*`' #knitr::all_patterns[['md']][['inline.code']]
-
-  if (is.character(text) && length(grep(pat, text))) {
-    return(TRUE)
-  }
-  return(FALSE)
-}
-
 set_knit_opts_common = function() {
 
   knitr::opts_chunk$set(dev=c('png','pdf'),dev.args=list(pdf=list(useDingbats=F,onefile=T)),data.path='knoter_data/')
@@ -216,7 +127,6 @@ set_knit_opts_common = function() {
 
 }
 
-set_knit_opts_html = set_knit_opts_common
 set_knit_opts_rmarkdown = set_knit_opts_common
 
 set_knit_opts_hooks_common = function() {
@@ -325,65 +235,6 @@ object_counter = function(init = 0L) {
 workbook_counter = object_counter(1L)
 multipage_counter = object_counter(1L)
 
-set_knit_hooks_html = function() {
-  set_knit_hooks_common()
-
-  old_chunk <- knitr::knit_hooks$get('chunk')
-  old_source <- knitr::knit_hooks$get('source')
-
-  knitr::knit_hooks$set(
-    document=function(x) {
-      if ( ! append.meta.created ) {
-        return (x);
-      }
-      return(post_html_fixes(x))
-    },
-    child.md=function(before,options,envir) {
-      if ( before ) {
-        default_label = knitr::opts_knit$get('unnamed.chunk.label')
-        current_counter = knitr:::chunk_counter() - 1
-        knitr:::chunk_counter(reset=T)
-        knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
-        res = knit_child(options$child.md)
-        knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
-        counter_inc = knitr:::chunk_counter(reset=T)
-        while (counter_inc < current_counter) {
-          counter_inc = knitr:::chunk_counter()
-        }
-        return(res)
-      }
-    },
-    plot=function(x,options) {
-      x = knitr::hook_plot_html(x,options)
-      paste(x, '</div><div>',
-               '<object type="application/pdf" data="file://',
-               knitr::fig_path('.pdf',options),
-               '" data-attachment="',
-               options$label,
-               '-',
-               options$fig.cur %n% 1L,
-               '.pdf"></object></div><div class="rcode">\n'
-            ,sep='')
-    },
-    chunk=function(x,options) {
-      x <- old_chunk(x,options)
-      # Remove trailing spaces
-      x = gsub(' +\n','\n',x)
-      # Remove trailing newlines
-      x = gsub("\n$","",x)
-      # Turn multiple newlines into br
-      x = gsub("\n+","<br/>",x,fixed=T)
-      # Turn double space into non-breaking space
-      x = gsub('  ', "&nbsp;&nbsp;",x)
-      return( paste(x,"\n",sep=''))
-    },source=function(x,options) {
-      x <- old_source(x,options)
-      x = gsub(' +\n','\n',x)
-      paste(gsub('  ', "&nbsp;&nbsp;", gsub("\n+","<br/>",gsub("\n$","",x),fixed=T)),"\n",sep='')
-    }
-  )
-
-}
 
 #' Knit a Rhtml or Rmd file to a HTML document
 #'
