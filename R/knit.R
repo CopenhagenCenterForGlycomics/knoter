@@ -136,6 +136,10 @@ set_knit_opts_hooks_common = function() {
       options$echo = FALSE
       options
     },
+    data.path = function(options) {
+      options$data.path = calculate_data_path(options)
+      options
+    },
     label.prefix = function(options) {
       if (is.null(options$label) || any(stringr::str_detect(string=options$label,pattern='unnamed-chunk'))) {
         options$label = paste(options$label.prefix,options$label.count,sep='_')
@@ -159,6 +163,10 @@ set_knit_hooks_common = function() {
       }
     }
   )  
+}
+
+calculate_data_path = function(opts) {
+  file.path(dirname(opts$fig.path),opts$data.path)
 }
 
 set_knit_hooks_rmarkdown = function() {
@@ -200,6 +208,7 @@ post_html_fixes = function(text) {
   head_elements = XML::getNodeSet(root, "/html/head")
   if ( ! is.null(head_elements) && length(head_elements) > 0 ) {
     XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(name='created', content=format(Sys.time(), "%FT%H:%M:%S%z" ))))
+    XML::addChildren(head_elements[[1]], XML::newXMLNode("meta", attrs=c(charset="utf-8")))
   }
 
   
@@ -265,36 +274,11 @@ multipage_counter = object_counter(1L)
 #' # Return the knitted Rmd document as HTML text
 #' html_string <- knoter::knit('example.Rmd')
 #'
-#' # Write the output of the knit to a file.
-#' out_filename <- knoter::knit('example.Rhtml',output='example.html')
-#'
-#' # Convert some Rmd to a HTML document
-#' rmd_text = "## This is a heading ##\n\nThis is a paragraph with some inline R `r 1 + 1` that will be converted.\n\n"
-#' html_string <- knoter::knit(text=rmd_text)
-#'
-#' # or if we want to write it to a file
-#' out_filename <- knoter::knit(text=rmd_text,output='example.html')
-#' }
 #' @export
-knit <- function(...,append.meta.created=T) {
+knit <- function(...) {
   args = list(...)
 
-  if (file_is_markdown(args[[1]], text=args[['text']])) {
-    args['append.meta.created'] <- append.meta.created
-    return(do.call( knit.md, args))
-  }
-  if ( ( is.null(names(args)) || names(args)[[1]] == "" ) && file.exists(args[[1]]) && is.null(args[['text']])) {
-    args[['text']] <- readChar(args[[1]], file.info(args[[1]])$size)
-    args[[1]] <- NULL
-  }
+  args$notebook = NULL
 
-  set_knit_hooks_html()
-
-  knitr::render_html()
-
-  set_knit_opts_html()
-
-  set_knit_opts_hooks_html()
-
-  return (do.call(knitr::knit,args))
+  return (do.call(knote,args))
 }

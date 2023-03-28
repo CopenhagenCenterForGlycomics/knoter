@@ -59,6 +59,7 @@ inline_css <- function(root) {
           XML::xmlAttrs(span_node) <- c(style=css_def,class=NULL)
         }
     })
+
 }
 
 style_pre_tags <- function(root) {
@@ -121,13 +122,18 @@ single_file_chunk_groups <- function(chunk_group,to_attach) {
     split(chunk_group,splits)
 }
 
-read_html <- function(html,asText,fragment.only=F,batch.chunks=10) {
-    root <- XML::htmlParse(html,asText=asText)
 
+rewrite_as_onenote_html <- function(html) {
+    root <- XML::htmlParse(html,asText=F)
     inline_css(root)
     style_pre_tags(root)
     style_source_tags(root)
     remove_pandoc_anchor_tags(root)
+    XML::saveXML(root)    
+}
+
+read_html_for_upload <- function(html,asText,fragment.only=F,batch.chunks=10) {
+    root <- XML::htmlParse(html,asText=asText)
 
     head_text = XML::saveXML(XML::getNodeSet(root,'//head')[[1]],doctype=NULL)
 

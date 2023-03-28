@@ -36,39 +36,10 @@
 #' @export
 knote <- function(...,notebook=NULL,section=NULL,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
 	arguments = list(...)
-	file_output = arguments[['output']]
 
-	knitted = knoter::knit(...)
-	files = read_html(knitted,asText=is.null(file_output),fragment.only=F,batch.chunks=batch.chunks)
+	arguments$output_format = note_page(notebook=notebook,section=section,sharepoint=sharepoint,batch.chunks=batch.chunks)
+	do.call(rmarkdown::render,arguments)
 
-	if ( is.null(notebook) ) {
-		return (NULL)
-	}
-	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
-	if ('extrablocks' %in% names(attributes(files))) {
-		if ( ! is.null(sharepoint) ) {
-			enable_sharepoint(sharepoint)
-		}
-
-		message('Waiting for Page to appear')
-		Sys.sleep(10)
-
-		pb = NULL
-
-		if (requireNamespace('progress',quietly=T)) {
-			pb = progress::progress_bar$new(total=length(attributes(files)$extrablocks))
-		}
-
-		for (extrablock in attributes(files)$extrablocks) {
-			patch_page_by_id(added$id,extrablock)
-			if ( ! is.null(pb) ) {
-				pb$tick()
-			}
-		}
-
-		use_default_endpoint()
-
-	}
 	NULL
 }
 
@@ -84,33 +55,9 @@ knote <- function(...,notebook=NULL,section=NULL,sharepoint=NULL,auto.archive=F,
 #' @param batch.chunks Batch chunks into groups of this size for upload
 #' @export
 knote.html <- function(file,notebook,section,sharepoint=NULL,auto.archive=F,batch.chunks=10) {
-	files = read_html(file,asText=F,fragment.only=F,batch.chunks=batch.chunks)
-	added = perform_upload(files,notebook,section,sharepoint,auto.archive)
 
-	if ('extrablocks' %in% names(attributes(files))) {
-		if ( ! is.null(sharepoint) ) {
-			enable_sharepoint(sharepoint)
-		}
+	perform_html_upload(file,notebook,section,sharepoint,batch.chunks)
 
-		message('Waiting for Page to appear')
-		Sys.sleep(15)
-
-		pb = NULL
-
-		if (requireNamespace('progress',quietly=T)) {
-			pb = progress::progress_bar$new(total=length(attributes(files)$extrablocks))
-		}
-
-		for (extrablock in attributes(files)$extrablocks) {
-			patch_page_by_id(added$id,extrablock)
-			if ( ! is.null(pb) ) {
-				pb$tick()
-			}
-		}
-
-		use_default_endpoint()
-
-	}
 	NULL
 }
 

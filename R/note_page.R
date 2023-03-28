@@ -169,7 +169,8 @@ note_page_knitr_options <- function() {
   }
 
   opts_chunk <- list(
-    render = note_render_hook
+    render = note_render_hook,
+    data.path= 'knoter_data/'
   )
 
   # return as knitr options
@@ -265,42 +266,11 @@ intermediates_generator <- function(original_input, intermediates_dir) {
 
 post_processor <- function(metadata, input_file, output_file, clean, verbose, notebook=NULL,section=NULL,sharepoint=NULL,batch.chunks=10 ) {
 
-  write_utf8(post_html_fixes(read_utf8(output_file)),file(output_file))
+  write_utf8(post_html_fixes(read_utf8(output_file)),output_file)
 
-  files = read_html(output_file,asText=F,fragment.only=F,batch.chunks=batch.chunks)
+  write_utf8(rewrite_as_onenote_html(output_file),output_file)
 
+  perform_html_upload(output_file,notebook,section,sharepoint,batch.chunks)
 
-  if (!is.null(notebook)) {
-    added = perform_upload(files,notebook,section,sharepoint,auto.archive=FALSE)
-    if ('extrablocks' %in% names(attributes(files))) {
-      if ( ! is.null(sharepoint) ) {
-        enable_sharepoint(sharepoint)
-      }
-
-      message('Waiting for Page to appear')
-      Sys.sleep(10)
-
-      pb = NULL
-
-      if (requireNamespace('progress',quietly=T)) {
-        pb = progress::progress_bar$new(total=length(attributes(files)$extrablocks))
-      }
-
-      for (extrablock in attributes(files)$extrablocks) {
-        patch_page_by_id(added$id,extrablock)
-        if ( ! is.null(pb) ) {
-          pb$tick()
-        }
-      }
-
-      use_default_endpoint()
-  }
-
-
-  }
-
-  files_paths = c( files[[1]]$path, sapply(attr(files,'extrablocks'), function(x) x$Presentation$path ))
-  files_contents = paste(unlist(sapply( files_paths, function(x) read_utf8(x), simplify=F )),collapse="\n")
-  write_utf8(files_contents,file(output_file))
   output_file
 }
