@@ -36,6 +36,7 @@ inline_css <- function(root) {
         },simplify=F),recursive=F)
         css_defs = cssparser::read_css(paste(style_declarations,collapse='\n'))
     } else {
+        message("Do not have cssparser module installed, using knitr css parser")
         css_defs = unlist( sapply( style_nodes, function(style) {
             child_strings = XML::getChildrenStrings(style)
             css_lines=strsplit(child_strings ,'\n',fixed=T)[[1]]
