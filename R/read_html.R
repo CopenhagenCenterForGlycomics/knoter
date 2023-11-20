@@ -34,7 +34,11 @@ inline_css <- function(root) {
         style_declarations = unlist( sapply( style_nodes, function(style) {
             child_strings = XML::getChildrenStrings(style)
         },simplify=F),recursive=F)
-        css_defs = cssparser::read_css(paste(style_declarations,collapse='\n'))
+        if (length(style_declarations) > 0) {
+            css_defs = cssparser::read_css(paste(style_declarations,collapse='\n'))
+        } else {
+            css_defs = NULL
+        }
     } else {
         message("Do not have cssparser module installed, using knitr css parser")
         css_defs = unlist( sapply( style_nodes, function(style) {
@@ -106,7 +110,24 @@ remove_pandoc_anchor_tags <- function(root) {
     sapply(anchors,function(anchor_node) {
         span <- XML::newXMLNode("span")
         XML::replaceNodes(anchor_node,span)
-    })    
+    })
+}
+
+lift_title_from_h1 <- function(root) {
+    h1s = c( XML::getNodeSet(root,'//h1'))
+    titles = c( XML::getNodeSet(root,'//head/title'))
+    head = c( XML::getNodeSet(root,'//head'))
+    if (length(h1s) < 1 || length(head) < 1) {
+        return()
+    }
+    if (length(titles) < 1) {
+        title <- XML::newXMLNode("title")
+
+        titles = c( title )
+    }
+    title = titles[[1]]
+    h1 = h1s[[1]]
+    XML::xmlValue(title) <- XML::getChildrenStrings(h1)
 }
 
 single_file_chunk_groups <- function(chunk_group,to_attach) {
@@ -130,6 +151,7 @@ rewrite_as_onenote_html <- function(html) {
     style_pre_tags(root)
     style_source_tags(root)
     remove_pandoc_anchor_tags(root)
+    lift_title_from_h1(root)
     XML::saveXML(root)    
 }
 

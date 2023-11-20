@@ -165,7 +165,7 @@ note_page_knitr_options <- function() {
     x = gsub('[\n\r]','\nNEWLINECODE\n',x)
     x <- old_source(unlist(Map(function(x) c(x,'NEWLINECODE') ,as.list(x)))[1:(2*length(x)-1)],options)
     x = gsub(' +\n','\n',x)
-    paste(gsub('  ', "&nbsp;&nbsp;", x),'\n',sep='')
+    paste(gsub('  ', "__TWOSPACE__ ", x),'\n',sep='')
   }
 
   opts_chunk <- list(

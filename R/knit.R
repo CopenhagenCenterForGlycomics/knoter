@@ -223,6 +223,7 @@ post_html_fixes = function(text) {
 
   text = XML::saveXML(root)
   text = gsub('nbsp','&nbsp;',text)
+  text = gsub('__TWOSPACE__ ','&nbsp;&nbsp;',paste(text,collapse=''))
   text = gsub('#br#\n*</pre>','</pre>',text)
   text = gsub('#br#\n*</code>','</code>',text)
 
