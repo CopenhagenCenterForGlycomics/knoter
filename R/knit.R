@@ -93,7 +93,7 @@ write_multipage_plot <- function(plotlist,thumbnail=NULL,pages=1,options=list())
 fix_escaping <- function(html) {
   # Markdown gets escaped to HTML - we should unescape anything
   # https://github.com/rstudio/markdown/blob/master/src/houdini_html_e.c
-  root <- XML::htmlParse(html,asText=T)
+  root <- XML::htmlParse(html,asText=T,encoding='utf8')
   comments <- XML::getNodeSet(root,'//comment()')
 
   ESCAPE_LOOKUPS <- list( '&#39;' = "'", '&#47;' = '/', '&quot;' = '"', '&amp;' = '&', '&lt;' = '<', '&gt;' = '>' )
@@ -201,7 +201,7 @@ post_html_fixes = function(text) {
   text = gsub('NEWLINECODE','<br/>',paste(text,collapse=''))
   text = gsub('NEWLINE','\n',paste(text,collapse=''))
 
-  root <- XML::htmlParse(text,asText=T,replaceEntities=T)
+  root <- XML::htmlParse(text,asText=T,replaceEntities=T,encoding='utf8')
   nodeset <- XML::getNodeSet(root, "/html/head/meta[@name='created']")
   if (! is.null(nodeset)) {
     XML::removeNodes(nodeset)
