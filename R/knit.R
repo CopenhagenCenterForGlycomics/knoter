@@ -192,7 +192,7 @@ knit_child.md = function(filename) {
   default_label = knitr::opts_knit$get('unnamed.chunk.label')
   current_counter = knitr:::chunk_counter() - 1
   knitr:::chunk_counter(reset=T)
-  knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
+  knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',filename))
   res = knitr::knit_child(filename)
   knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
   counter_inc = knitr:::chunk_counter(reset=T)
