@@ -179,20 +179,27 @@ set_knit_hooks_rmarkdown = function() {
     },
     child.md = function(before,options,envir) {
       if ( before ) {
-        default_label = knitr::opts_knit$get('unnamed.chunk.label')
-        current_counter = knitr:::chunk_counter() - 1
-        knitr:::chunk_counter(reset=T)
-        knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
-        res = knitr::knit_child(options$child.md)
-        knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
-        counter_inc = knitr:::chunk_counter(reset=T)
-        while (counter_inc < current_counter) {
-          counter_inc = knitr:::chunk_counter()
-        }
-        return(res)
+        return( knit_child.md(options$child.md) )
       }
     }
   )
+}
+
+#' Knit a Rmd file as a child, and return the raw output
+#' Make sure to set results = 'asis' and echo = FALSE
+#' @export
+knit_child.md = function(filename) {
+  default_label = knitr::opts_knit$get('unnamed.chunk.label')
+  current_counter = knitr:::chunk_counter() - 1
+  knitr:::chunk_counter(reset=T)
+  knitr::opts_knit$set('unnamed.chunk.label'=gsub('\\..*','',options$child.md))
+  res = knitr::knit_child(filename)
+  knitr::opts_chunk$set('unnamed.chunk.label'=default_label)
+  counter_inc = knitr:::chunk_counter(reset=T)
+  while (counter_inc < current_counter) {
+    counter_inc = knitr:::chunk_counter()
+  }
+  return(res)
 }
 
 post_html_fixes = function(text) {
